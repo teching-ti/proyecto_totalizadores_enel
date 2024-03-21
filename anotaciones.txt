@@ -1,0 +1,33 @@
+// Se recomienda que el entorno virtual se llame 'venv', de este modo no se tendrían inconvenientes al momento de hacer un gitpush gracias al .gitignore
+/*** Scripts importantes
+'instalar librerías requeridas hasta el momento' 
+pip install -r requirements.txt
+
+'crear archivo de librerias requeridas, también debe ejecutarse en caso de actualizacion'
+pip freeze > requirements.txt
+
+
+
+Información recolectada en base a los archivos:
+
+- Se cuenta con dos tipos de archivo de donde se realizará la extracción de información.
+- Estos archivos se encuentran en formato prn y csv. (Es importante desarrollar una tabla de manera general para estos dos tipos de archivo).
+- En al archivo 'relacion totalizadores' se tienen dos columnas importantes: 'suministro y medidor'. Los PRN cuentan con el número de suministro en el medio del nombre del archivo '22230A', y el número de medidor en su primera columna del archivo prn. Esa columna tiene como nombre METER ID. Mientras que los csv, tienen este número de medidor en los primeros dígitos de su primera columna llamanada 'punto de entrega'.
+
+Estos dos tipos de archivos cuentan con fechas y horas, esas son en las que se registra información cada 15 minutos.
+
+- Luego, con esa información obtenida se percibe lo siguiente, por ejemplo a las 00:15:00 horas se obtiene un monto de consumo por día, se obtiene un total general de todo el consumo en esas horas durante 7 días. Osea el monto registrado a las 00:15.00 del día 24/02, 23/02..., 01/03. Entonces se realiza ese proceso por hora y así se obtiene un valor total de cada hora en cuestión 00:15:00, 00:30:00, 00:45:00. Con el total general. (De ahí sale una gráfica)
+
+- Ya con este total general, si se hace una división/7, se obtiene un promedio de kwh. (de aquí sale otra gráfica)
+
+De ambas gráficas es de donde se obtiene el tipo de suministro, uno por cada gráfica.
+
+/****----
+- script para crear la base de datos: 
+CREATE TABLE `prueba_totalizadores`.`datos_medidor_consumo` (`id` INT NOT NULL AUTO_INCREMENT , `meter_id` VARCHAR(20) NOT NULL , `date` DATE NOT NULL , `time` TIME NOT NULL , `kwh_del` FLOAT NOT NULL , `kwh_rec` FLOAT NOT NULL , `kvarh_q1` FLOAT NOT NULL , `kvarh_q2` FLOAT NOT NULL , `kvarh_q3` FLOAT NOT NULL , `kvarh_q4` FLOAT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+
+- script para eliminar los registros de la base de datos:
+truncate table datos_medidor_consumo
+
+/****-----
+/21_03_2024, ya se puede registra en la base de datos la información de los suministros desde amboso formatos (Aún se debe realizar una modificación para evitar repeticiones en caso de que un archivo se actuaice) => /* para esto podría buscar en la base de datos si ya existe registrado un suministro con la misma fecha y el mismo número de suministro, a fin de evitar repetición de datos */
