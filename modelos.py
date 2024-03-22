@@ -3,7 +3,7 @@ from db import Base
 
 class DatosMedidorConsumo(Base):
     __tablename__ = "datos_medidor_consumo"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     meter_id = Column(String, nullable=True)
     date = Column(Date, nullable=True)
