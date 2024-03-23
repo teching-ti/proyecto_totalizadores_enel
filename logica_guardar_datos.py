@@ -12,6 +12,7 @@ def evaluar_guardar_archivos(lista_rutas):
     for ruta in lista_rutas:
         # con el dato de la ruta se obtiene solo el nombre del archivo
         nombre_archivo = os.path.basename(ruta)
+        print(f"Analizando: {ruta}")
         # se obtiene la extension del archivo
         extension_archivo = os.path.splitext(nombre_archivo)[1]
         try:
@@ -65,7 +66,7 @@ def evaluar_guardar_archivos(lista_rutas):
                                 kvarh_q3=float(values[8]) if values[8] else None,
                                 kvarh_q4=float(values[9]) if values[9] else None,
                             )
-                            print(data)
+
                         elif(ruta.endswith('.prn')):
                             ''' ESTA CONDICION SOLO APLICA A LOS ARCHIVOS DE EXTENSIÓN PRN '''
                             # el identificador del meter es modificado para que no posee comillas ni espacios
@@ -106,19 +107,21 @@ def evaluar_guardar_archivos(lista_rutas):
                                 kvarh_q3=float(values[8]) if values[8] else None,
                                 kvarh_q4=float(values[9]) if values[9] else None,
                             )
-                            print(data)
+
                             # se agregan los datos de la sesion para acceder a la base de datos
-                        db.add(data)
+                        #db.add(data)
                     # el commit añade todo lo que se ha obtenido, si hay un error en algún objeto, entonces no se guarda nada
-                    db.commit()
+                    #db.commit()
             else:
                 # esto aplica solo a los archivos que no puedieron ser evaluados por no cumplir con el formato o con el nombre
                 archivos_no_validos.append(nombre_archivo)
         except ValueError:
+            print("Aqui si se llegga")
             archivos_no_validos.append(nombre_archivo)
             #print(f"Archivo con dato inválido: {ruta}")
+            db.rollback()
+
         else:
-            
-    #"Se retorna una lista de archivos no validos, osea los que según el filtro principal, no cumplen con las condiciones para abrir el archivo"
+            #"Se retorna una lista de archivos no validos, osea los que según el filtro principal, no cumplen con las condiciones para abrir el archivo"
             print(archivos_no_validos)
     return archivos_no_validos

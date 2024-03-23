@@ -28,13 +28,12 @@ CREATE TABLE `prueba_totalizadores`.`datos_medidor_consumo` (`id` INT NOT NULL A
 truncate table datos_medidor_consumo
 
 /****-----
-/21_03_2024, ya se puede registra en la base de datos la información de los suministros desde amboso formatos 
-(Aún se debe realizar una modificación para evitar repeticiones en caso de que un archivo se actuaice) => /* para esto podría buscar en la base de datos si ya existe registrado un suministro con la misma fecha y el mismo número de suministro, a fin de evitar repetición de datos */
+23_03
+Se agregó un db.rollback() para cuando se reconozca un error en el proceso, lo que hace este rollback es deshacer lo instanciado para la base de datos en un archivo,
+osea con las líneas
 
-/****-----
-/21_02_2024, ya existe un mensaje de alerta modal para mostrar los archivos no se pudieron procesar 'al momento del inicio de la lógica cuando se evalúa su compatibilidad'
-////////*****SI SE OBVIA UN ARCHIVO POR TENER (POR EJEMPLO) UN DATO DE FECHA 999, ENTONCES ES IMPORTANTE QUE OBTENGAMOS SU NOMBRE AÑADIDO AL ARREGLO QUE ESTAMOS MANEJANDO
-/CON LA FINALIDAD DE MOSTRAR AL USUARIO EL NOMBRE DE LOS ARCHIVOS QUE NO HAN PODIDO SER PROCESADOS
-(El mensaje de alerta se encuentra en el archivo interfaz.py, espera el return de 'logica_guardar_datos').
+* Proceso desarrollo 23_03
+Seleccionar fechas y obtener data de esa manera
+
 
 // este aplicativo podría ser desplegado en un celular? De ser así se podrían realizar pruebas en un dispositivo android
