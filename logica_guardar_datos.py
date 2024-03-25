@@ -109,9 +109,9 @@ def evaluar_guardar_archivos(lista_rutas):
                             )
 
                             # se agregan los datos de la sesion para acceder a la base de datos
-                        #db.add(data)
+                        db.add(data)
                     # el commit añade todo lo que se ha obtenido, si hay un error en algún objeto, entonces no se guarda nada
-                    #db.commit()
+                    db.commit()
             else:
                 # esto aplica solo a los archivos que no puedieron ser evaluados por no cumplir con el formato o con el nombre
                 archivos_no_validos.append(nombre_archivo)
