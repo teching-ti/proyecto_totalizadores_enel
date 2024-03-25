@@ -3,6 +3,7 @@ import flet as ft
 import os
 from time import sleep
 from logica_guardar_datos import evaluar_guardar_archivos
+import datetime
 
 def main(page: ft.Page):
     # datos de la ventana
@@ -14,6 +15,29 @@ def main(page: ft.Page):
     page.window_resizable = False
     # posicionammiento para donde debería de aparecer la ventana
     page.window_center()
+
+    '''probando date picker'''
+    def change_date(e):
+        print(f"Date picker changed, value is {date_picker.value}")
+        
+    def date_picker_dismissed(e):
+        print(f"Date picker dismissed, value is {date_picker.value}")
+
+    date_picker = ft.DatePicker(
+        on_change=change_date,
+        on_dismiss=date_picker_dismissed,
+        first_date=datetime.datetime(2023, 10, 1),
+        last_date=datetime.datetime(2050, 10, 1),
+    )
+
+    page.overlay.append(date_picker)
+
+    date_button = ft.ElevatedButton(
+        "Pick date",
+        icon=ft.icons.CALENDAR_MONTH,
+        on_click=lambda _: date_picker.pick_date(),
+    )
+    '''hasta aqui va el datepciker'''
 
     # funcionalidad para poder seleccionar los archivos
     def dialog_picker(e:FilePickerResultEvent):
@@ -123,16 +147,20 @@ def main(page: ft.Page):
                 btnGuardarData,
                 col={"sm": 2.5},
             )], 
-            alignment=MainAxisAlignment.CENTER
+            alignment=MainAxisAlignment.CENTER,
         ),
 
-        ResponsiveRow(
+        Row(
             [
             ft.Container(
                 archivos_seleccionados_texto,
-            )]
+                width=200,
+            ),
+            ft.Container(
+                date_button
+            ),
+            ]
         ),
-
     )
  
 ft.app(target=main)
