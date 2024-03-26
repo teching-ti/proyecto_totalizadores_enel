@@ -22,7 +22,18 @@ De ambas gráficas es de donde se obtiene el tipo de suministro, uno por cada gr
 
 /****----
 - script para crear la base de datos: 
-CREATE TABLE `prueba_totalizadores`.`datos_medidor_consumo` (`id` INT NOT NULL AUTO_INCREMENT , `meter_id` VARCHAR(20) NOT NULL , `date` DATE NOT NULL , `time` TIME NOT NULL , `kwh_del` FLOAT NOT NULL , `kwh_rec` FLOAT NOT NULL , `kvarh_q1` FLOAT NOT NULL , `kvarh_q2` FLOAT NOT NULL , `kvarh_q3` FLOAT NOT NULL , `kvarh_q4` FLOAT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+CREATE TABLE datos_medidor_consumo(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    meter_id VARCHAR(255),
+    date DATE,
+    time TIME,
+    kwh_del DECIMAL(14, 8),
+    kwh_rec DECIMAL(14, 8),
+    kvarh_q1 DECIMAL(14, 8),
+    kvarh_q2 DECIMAL(14, 8),
+    kvarh_q3 DECIMAL(14, 8),
+    kvarh_q4 DECIMAL(14, 8)
+);
 
 - script para eliminar los registros de la base de datos:
 truncate table datos_medidor_consumo
