@@ -1,3 +1,5 @@
+'''***** NO TOCAR *****'''
+''' OBTIENE LA SUMA COMPLETA DE CONSUMOS DE UN MEDIDOR DENTRO DE UN RANGO '''
 # en el archivo suma_dos se peude obtener la suma total en base a las horas en un rango de fechas
 # de estos datos sale un gráfico, primero es importante que el programa reconozca que fechas son las que tienen datos
 # y en base a las fechas y las horas se coloca la información
@@ -22,7 +24,7 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     ).group_by(
         func.HOUR(DatosMedidorConsumo.time),
         func.MINUTE(DatosMedidorConsumo.time) / 15
-    ).order_by(
+    ).order_by( 
         func.HOUR(DatosMedidorConsumo.time),
         func.MINUTE(DatosMedidorConsumo.time)
     )
@@ -32,14 +34,15 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
 
     # imrpimiendo los resultados por horas, se pueden colocar las variables que contienen estos datos
     for resultado in resultados:
-        #hora = resultado.hora
-        #minuto = resultado.minuto
+        hora = resultado.hora
+        minuto = resultado.minuto
         consumo_total = resultado.consumo_total
+        #print(f"Hora: {hora:02d}:{minuto:02d} = {consumo_total}")
         print(f"{consumo_total}")
 
 # se asignan datos para realizar pruebas
-fecha_inicio = datetime(2024, 3, 2)
-fecha_fin = datetime(2024, 3, 4)
-medidor_id = "08119"
+fecha_inicio = datetime(2024, 2, 24)
+fecha_fin = datetime(2024, 3, 1)
+medidor_id = "8096"
 
 obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id)

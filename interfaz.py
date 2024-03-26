@@ -8,7 +8,7 @@ import datetime
 def main(page: ft.Page):
     # datos de la ventana
     page.title = "Aplicativo para GGEE By TI"
-    page.bgcolor = ft.colors.ON_SECONDARY_CONTAINER
+    page.bgcolor = ft.colors.SECONDARY_CONTAINER
     page.window_width = 1350
     page.window_height = 1000
     page.window_maximizable = False
@@ -16,10 +16,13 @@ def main(page: ft.Page):
     # posicionammiento para donde debería de aparecer la ventana
     page.window_center()
 
-    '''probando date picker'''
+    '''PROBANDO DATE PICKER'''
     def change_date(e):
-        print(f"Date picker changed, value is {date_picker.value}")
+        print(f"Date picker changed, value is: ")
+        #print(date_picker.value.date())
+        primera_fecha = date_picker.value.date()
         
+
     def date_picker_dismissed(e):
         print(f"Date picker dismissed, value is {date_picker.value}")
 
@@ -33,11 +36,11 @@ def main(page: ft.Page):
     page.overlay.append(date_picker)
 
     date_button = ft.ElevatedButton(
-        "Pick date",
+        "Seleccionar Fecha",
         icon=ft.icons.CALENDAR_MONTH,
         on_click=lambda _: date_picker.pick_date(),
     )
-    '''hasta aqui va el datepciker'''
+    '''HASTA AQUI VA EL DATE PCIKER'''
 
     # funcionalidad para poder seleccionar los archivos
     def dialog_picker(e:FilePickerResultEvent):
@@ -58,10 +61,11 @@ def main(page: ft.Page):
         # modiifcación visual
         
         # en este apartado se actualiza la casilla de texto para mostrar la información que ahora posee
-        archivos_seleccionados_texto.update()
+        '''En esta seccion se puede colocar una lista para mostrar todos los archivos cargados'''
+        dialog_open_seleccionados()
     
     # esta variable es una casilla de texto en donde se mostará el nombre de los archivos
-    archivos_seleccionados_texto = ft.Text(color=ft.colors.BLACK, selectable=True)
+    archivos_seleccionados_texto = ft.Text(selectable=True)
 
     # se muestra la ventana para poder seleccionar archivos
     pick_files_dialog = FilePicker(on_result=dialog_picker)
@@ -77,7 +81,7 @@ def main(page: ft.Page):
             # la linea siguiente es una variable que contiene una funcion, esta se ejecutará y el resultado devuelto 'return, se guardará en esta variable'
             # entonces,a partir de aquí continúa la secuencia el archivo 'logica_guardar_datos'
             archivos_no_procesados = evaluar_guardar_archivos(lista)
-            print(archivos_no_procesados)
+            #print(archivos_no_procesados)
             ''' INCIA ALERT DIALOG (MODAL) PARA MOSTRAR INFORMACIÓN DE SI LOS ARCHIVOS FUERON PROCESADOS POR LA LÓGICA O NO'''
             # si el archivo logica, devuelve información 'osea la lista de archivos no permitidos con data', se ejecuta la siguiente condición
             if archivos_no_procesados:
@@ -108,6 +112,27 @@ def main(page: ft.Page):
             ''' TERMINA LA ALERTA '''
         except:
             print("Informar al usuario que primero debe seleccionar archivos")
+
+
+    # método para enviar las fechas seleccionadas al archivo que realizará el cálculo y mostrará el gráfico
+    '''
+    -------
+    '''
+            
+    # funcion para mostrar los archivos cargados en un alert
+    alerta_archivos_seleccionados = AlertDialog(
+        title=Text('Archivos cargados'),
+        content=archivos_seleccionados_texto,
+        icon = ft.Icon(name=ft.icons.WARNING_AMBER),
+        on_dismiss=lambda event: True
+    )
+
+    def dialog_open_seleccionados():
+        page.dialog = alerta_archivos_seleccionados
+        alerta_archivos_seleccionados.open = True
+        page.update()
+
+    
         
     # creacion del boton para seleccionar y cargar los archivos con los que se realizará el proceso
     btnSeleccionar =  ElevatedButton("Seleccionar archivos", icon=ft.icons.UPLOAD_FILE, style=ft.ButtonStyle(
@@ -137,30 +162,45 @@ def main(page: ft.Page):
 
     #se añaden los elementos creados a la ventana
     page.add(
-
-        ResponsiveRow(
+        Row(
             [ft.Container(
                 btnSeleccionar,
                 col={"sm": 2.5},
+                margin=18,
             ),
+             ft.VerticalDivider(width=9),
             ft.Container(
                 btnGuardarData,
                 col={"sm": 2.5},
-            )], 
+                margin=18,
+            ),
+            #  ft.VerticalDivider(width=9),
+            # ft.Container(
+            #     Text("Aqui ira otro elemento\nservirá para mostrar los archivos seleccionados", color="black"),
+            #     width=350,
+            #     bgcolor=ft.colors.BLUE_50,
+            #     margin=18,
+            #     height=250,
+            # )
+            ], 
             alignment=MainAxisAlignment.CENTER,
+            #spacing=0,
         ),
 
         Row(
             [
             ft.Container(
-                archivos_seleccionados_texto,
-                width=200,
-            ),
-            ft.Container(
-                date_button
+                width=350,
             ),
             ]
         ),
+        Row(
+            [
+            ft.Container(
+                date_button,
+            ),
+            ]
+        )
     )
  
 ft.app(target=main)

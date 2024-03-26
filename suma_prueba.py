@@ -110,7 +110,5 @@ fecha_seleccionada = '2024-03-03'
 
 # Obtener los datos de consumo para la fecha seleccionada
 datos_dia = obtener_consumo_diario(fecha_seleccionada)
-
 # Generar y mostrar el gráfico de consumo diario
-generar_grafico_consumo_diario(datos_dia)
-'''
+generar_grafico_consumo_diario(datos_dia)'''

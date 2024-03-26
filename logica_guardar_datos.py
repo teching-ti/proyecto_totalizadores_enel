@@ -25,14 +25,22 @@ def evaluar_guardar_archivos(lista_rutas):
             SOMETER A EVALUACIÓN LA SEGUNDA CONDICIÓN PARA LOS ARCHIVOS PRN '''
             if((extension_archivo=='.csv' and nombre_archivo.startswith("EDP")) or (extension_archivo=='.prn' and nombre_archivo.startswith("A"))):
                 with open(ruta, 'r') as archivo:
+                    '''esta porcion del codigo leerá solo la primera línea para detectar si el archivo esta separado por , o ;'''
+                    separador=''
+                    primera_linea = archivo.readline()
+                    if ',' in primera_linea:
+                        separador = ','
+                    elif ';' in primera_linea:
+                        separador =  ';'
+
                     # este next sala la primera línea del archivo, es lo ideal ya que en la primera linea se encuentra el nombre de las columnas
-                    next(archivo)
+                    #next(archivo)
                     # se lee el archivo linea por linea
                     for line in archivo:
                         # separa los valores de la línea por comas y elimina los espacios en blanco que se encuentra entre cada dato
                         # los guarda dentro de una lista llamada 'values'
-                        values = [value.strip() for value in line.split(',')]
-                        # print(values)
+                        values = [value.strip() for value in line.split(separador)]
+                        #print(values)
                         ''' ESTA CONDICION SOLO APLICA A LOS ARCHIVOS DE EXTENSIÓN CSV '''
                         if(ruta.endswith('.csv')):
                             # la variable 'identificador_elster' usa una expresión regular que eliminará todos los caracteres excepto los primeros numeros de values[0]
@@ -45,12 +53,20 @@ def evaluar_guardar_archivos(lista_rutas):
                             date_str = values[1]
                             # el dato está como cadenena, por lo tanto se convierte al tipo de dato fecha
                             date = datetime.strptime(date_str, '%d/%m/%Y').date()
-
+                            
                             # se quitan las comillas del valor que llega desde el archivo para las horas
                             time_str = values[2].strip('"')
-                            # el dato está como cadenena, por lo tanto se convierte al tipo de dato time
-                            time_obj = datetime.strptime(time_str, '%H:%M:%S').time()
 
+                            # existe la posibilidad de que la fecha llegue solo como horas y minutos, como también como horas, minutos y segundos
+                            # entonces es recomendable evaluar la cantidad de caracteres para convertir a fecha
+                            if len(time_str)<=5:
+                                time_edit = datetime.strptime(time_str, '%H:%M').time()
+                            else:
+                                time_edit = datetime.strptime(time_str, '%H:%M:%S').time()
+                                
+                            time_obj = time_edit
+                            # el dato está como cadenena, por lo tanto se convierte al tipo de dato time
+                            
                             # se establece en los datos numéricos que si se encuentran vacíos, estos se remplazarán por None   
                             # se crea un objeto data para insertar los valores obtenidos
                             # en caso de que no exista data para los campos numéricos
@@ -116,7 +132,6 @@ def evaluar_guardar_archivos(lista_rutas):
                 # esto aplica solo a los archivos que no puedieron ser evaluados por no cumplir con el formato o con el nombre
                 archivos_no_validos.append(nombre_archivo)
         except ValueError:
-            print("Aqui si se llegga")
             archivos_no_validos.append(nombre_archivo)
             #print(f"Archivo con dato inválido: {ruta}")
             db.rollback()
