@@ -3,7 +3,7 @@ import flet as ft
 import os
 from time import sleep
 from logica_guardar_datos import evaluar_guardar_archivos
-import datetime
+import datetime as dt
 
 def main(page: ft.Page):
     # datos de la ventana
