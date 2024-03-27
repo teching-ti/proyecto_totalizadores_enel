@@ -6,9 +6,10 @@ from db import session
 from datetime import datetime
 from modelos  import DatosMedidorConsumo
 import matplotlib.pyplot as plt
+from decimal import Decimal
 
 def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
-
+    sumatoria_total = []
     # se realiza consulta a la base de datos para obtenr el consumo total por cuarto de hora en el rango de fechas dado y para el medidor especificado
     consulta = session.query(
         # aquí se obtienen las horas y minutos, luego se asigna el label para nombrar asi a la columna
@@ -38,22 +39,72 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     # que contiene la hora, minuto y consumo total, estas tuplas se agregan a una lista llamada 'datos_consumo'
     datos_consumo = [(resultado.hora, resultado.minuto, resultado.consumo_total) for resultado in resultados]
     
-    '''ESTE BUCLE SOLO MUESTRA POR CONSOLA LOS VALORES QUE SE VAN A SUMAR Y LOS QUE SERÁN USADOS COMO COMPARACIÓN PARA GENERAR LA GRÁFICA'''
-    '''SE USARÁ ALGO SIMILAR PARA PODER MOSTRAR EL DATO DE "ACUMULADO KWH" '''
+
+    ''' /*********************************/Desde este punto se obtendrán datos para realizar el reporte\*********************************'''
+    # se crean las variables para calcular los datos máximos
+    max_consumo = float('-inf')
+    hora_max_consumo = None
+
     for resultado in resultados:
         hora = resultado.hora
         minuto = resultado.minuto
         consumo_total = resultado.consumo_total
-        print(f"{consumo_total}")
+        # se añade a la lsita sumatoria_total la suma de consumos obtenidos
+        sumatoria_total.append(consumo_total)
 
-    # se retorna la lista datos_consumo
+        # se calcula cual es el valor de maximo consumo para asi obtener la hora y minuto de máximo consumo
+        if consumo_total > max_consumo:
+            max_consumo = consumo_total
+            hora_max_consumo = (hora, minuto)
+
+    # se crea una variable que almacenará la suma de los elementos en la lista
+    resultado_total = sum(sumatoria_total)
+
+    # consulta para obtener el numero de dias de los que se tiene registro en el rango de fechas seleccionado
+    consulta_numero_dias = session.query(
+        # cuenta los días únicos en los que se registraron lecturas
+        func.count(func.distinct(DatosMedidorConsumo.date)).label('dias_unicos')
+    ).filter(
+        DatosMedidorConsumo.date >= fecha_inicio,
+        DatosMedidorConsumo.date <= fecha_fin,
+        DatosMedidorConsumo.meter_id == medidor_id,
+        # siempre y cuando no se obtenga información en el campo requerido
+        DatosMedidorConsumo.kwh_del != None
+    )
+
+    # se gurda la información obtenida en una variable
+    resultado_n_dias = consulta_numero_dias.first()
+    # se guarda especificamente el numero de dias ya que el resultado como colunma a mostrar fue 'dias_unicos'
+    dias_con_datos = resultado_n_dias.dias_unicos
+
+    # se compara el número de días con los que se tiene registro, esto a fin de obtener un cálculo mensual
+    # este ejemplo es para febrero, obtener el mes de registro 
+
+    if(dias_con_datos==1):
+        operante = Decimal(28)
+    elif(dias_con_datos==2):
+        operante = Decimal(28/2)
+    elif(dias_con_datos==3):
+        operante = Decimal(28/3)
+    elif(dias_con_datos==4):
+        operante = Decimal(28/4)
+    elif(dias_con_datos==5):
+        operante = Decimal(28/5)
+    elif(dias_con_datos==6):
+        operante = Decimal(28/6)
+    elif(dias_con_datos==7):
+        operante = Decimal(28/7)
+
+    print(f"Acumulado kwh: {resultado_total}")
+    print(f"Consumo del mes: {round(resultado_total*operante, 6)}")
+
+    print("Valor máximo de consumo:", max_consumo)
+    print("Hora del valor máximo de consumo:", hora_max_consumo[0], ":", hora_max_consumo[1])
+
+    ''' /*********************************/Termina el cálculo de datos para realizar el reporte\*********************************'''
+
+    # SE RETORNA LA LISTA DE DATOS QUE SERÁ REVELANTE PARA GENERAR EL GRÁFICO
     return datos_consumo
-
-# se asignan datos para realizar pruebas
-# debemos asegurarnos de respetar los formatos de fecha
-# fecha_inicio = datetime(2024, 2, 24)
-# fecha_fin = datetime(2024, 3, 1)
-# medidor_id = "8096"
 
 # se asignan datos para realizar pruebas
 # debemos asegurarnos de respetar los formatos de fecha
@@ -61,8 +112,15 @@ fecha_inicio = datetime(2024, 2, 24)
 fecha_fin = datetime(2024, 3, 1)
 medidor_id = "8096"
 
+# se asignan datos para realizar pruebas
+# debemos asegurarnos de respetar los formatos de fecha
+# fecha_inicio = datetime(2024, 3, 1)
+# fecha_fin = datetime(2024, 3, 4)
+# medidor_id = "08119"
+
 #obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id)
 
+# llamando a la funcion
 datos_consumo = obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id)
 
 def generar_grafico_consumo_por_horas(datos):

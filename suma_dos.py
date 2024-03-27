@@ -11,6 +11,7 @@ from datetime import datetime
 from modelos  import DatosMedidorConsumo
 
 def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
+    sumatoria_total = []
 
     # se realiza consulta a la base de datos para obtenr el consumo total por cuarto de hora en el rango de fechas dado y para el medidor especificado
     consulta = session.query(
@@ -31,14 +32,17 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
 
     # se ejecuta la consulta
     resultados = consulta.all()
-
+    
     # imrpimiendo los resultados por horas, se pueden colocar las variables que contienen estos datos
-    for resultado in resultados:
-        hora = resultado.hora
-        minuto = resultado.minuto
-        consumo_total = resultado.consumo_total
-        #print(f"Hora: {hora:02d}:{minuto:02d} = {consumo_total}")
-        print(f"{consumo_total}")
+    # for resultado in resultados:
+    #     hora = resultado.hora
+    #     minuto = resultado.minuto
+    #     consumo_total = resultado.consumo_total
+    #     #print(f"Hora: {hora:02d}:{minuto:02d} = {consumo_total}")
+    #     sumatoria_total.append(consumo_total)
+
+    # print(sum(sumatoria_total))
+    print(resultados)
 
 # se asignan datos para realizar pruebas
 fecha_inicio = datetime(2024, 2, 24)

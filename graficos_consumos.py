@@ -5,6 +5,7 @@ from modelos  import DatosMedidorConsumo
 import matplotlib.pyplot as plt
 
 def obtener_consumo_por_medidor_y_fecha(fecha, medidor_id):
+
     # Realizar la consulta a la base de datos para obtener los datos de consumo
     consulta = session.query(
         func.HOUR(DatosMedidorConsumo.time).label('hora'),
@@ -14,19 +15,19 @@ def obtener_consumo_por_medidor_y_fecha(fecha, medidor_id):
         DatosMedidorConsumo.date == fecha,
         DatosMedidorConsumo.meter_id == medidor_id
     ).group_by(
-        func.HOUR(DatosMedidorConsumo.time),
-        func.MINUTE(DatosMedidorConsumo.time) / 15
+         func.HOUR(DatosMedidorConsumo.time),
+         func.MINUTE(DatosMedidorConsumo.time) / 15
     ).order_by( 
         func.HOUR(DatosMedidorConsumo.time),
         func.MINUTE(DatosMedidorConsumo.time)
     )
     
-    # Ejecutar la consulta y obtener los resultados
+    # ejecutar la consulta y obtener los resultados
     resultados = consulta.all()
-    
+
     # Transformar los resultados en una lista de tuplas de la forma (hora, minuto, consumo_total)
     datos_consumo = [(resultado.hora, resultado.minuto, resultado.consumo_total) for resultado in resultados]
-    
+
     return datos_consumo
 
 def generar_grafico_consumo_por_horas(fechas, medidor_id):
@@ -43,19 +44,31 @@ def generar_grafico_consumo_por_horas(fechas, medidor_id):
         consumos = [consumo for _, _, consumo in datos_consumo]
 
         # Encontrar el índice del consumo máximo
-        indice_pico_maximo = consumos.index(max(consumos))
-        hora_pico_maximo = horas[indice_pico_maximo]
+        # indice_pico_maximo = consumos.index(max(consumos))
+        # hora_pico_maximo = horas[indice_pico_maximo]
+        # Verificar si consumos_filtrados no está vacía antes de calcular el máximo
+         # Filtrar los valores None de la lista consumos
+        consumos_filtrados = [valor for valor in consumos if valor is not None]
+
+        if consumos_filtrados:
+            indice_pico_maximo = consumos.index(max(consumos_filtrados))
+            hora_pico_maximo = horas[indice_pico_maximo]
+            max_consumo = max(consumos_filtrados)
+        else:
+            # En caso de que todos los valores sean None, se imprime un mensaje apropiado
+            print("No hay datos de consumo disponibles para la fecha:", fecha)
+            continue
 
         # Graficar los datos de consumo para esta fecha
-        plt.plot(horas, consumos, label=f'Fecha: {fecha} - Máx. Demanda: {hora_pico_maximo} - {max(consumos):.8f} kWh')
+        plt.plot(horas, consumos, label=f'Fecha: {fecha.date()} - Máx. Demanda: {hora_pico_maximo} - {max_consumo:.8f} kWh')
 
     # Añadir etiquetas y leyenda al gráfico
     plt.title('Consumo de energía por hora')
     plt.xlabel('Hora del día')
     plt.ylabel('Consumo de energía (kWh)')
-    plt.xticks(rotation='vertical')
+    plt.xticks(range(0, len(horas), 4), rotation='vertical')
     plt.legend()
-    plt.grid(True)
+    plt.grid(axis='y')
     plt.tight_layout()
     plt.show()
 

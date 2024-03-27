@@ -7,8 +7,9 @@ import datetime
 
 def main(page: ft.Page):
     # datos de la ventana
+    page.theme_mode = ft.ThemeMode.DARK
     page.title = "Aplicativo para GGEE By TI"
-    page.bgcolor = ft.colors.SECONDARY_CONTAINER
+    #page.bgcolor = ft.colors.SECONDARY_CONTAINER
     page.window_width = 1350
     page.window_height = 1000
     page.window_maximizable = False

@@ -43,8 +43,6 @@ truncate table datos_medidor_consumo
 Se agregó un db.rollback() para cuando se reconozca un error en el proceso, lo que hace este rollback es deshacer lo instanciado para la base de datos en un archivo,
 osea con las líneas
 
-* Proceso desarrollo 23_03
-Seleccionar fechas y obtener data de esa manera
-
-
-// este aplicativo podría ser desplegado en un celular? De ser así se podrían realizar pruebas en un dispositivo android
+27_03
+- El reporte y los cálculos a mostra para cada medidor serán proporcionados desde el archivo 'grafico_suma_consumos', que de momento proporciona uno de los gráficos
+con la data obtenida para presentar el reporte
