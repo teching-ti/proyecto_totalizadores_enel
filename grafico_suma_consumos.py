@@ -76,24 +76,26 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     resultado_n_dias = consulta_numero_dias.first()
     # se guarda especificamente el numero de dias ya que el resultado como colunma a mostrar fue 'dias_unicos'
     dias_con_datos = resultado_n_dias.dias_unicos
-
     # se compara el número de días con los que se tiene registro, esto a fin de obtener un cálculo mensual
-    # este ejemplo es para febrero, obtener el mes de registro 
+    # este ejemplo es para febrero, obtener el mes de registro
+
+    # obtener dias por mes
+    # CALCULAR A QUE MES PERTENECE Y EJECUTAR EL CALCULO DEL MES
 
     if(dias_con_datos==1):
-        operante = Decimal(28)
+        operante = Decimal(31)
     elif(dias_con_datos==2):
-        operante = Decimal(28/2)
+        operante = Decimal(31/2)
     elif(dias_con_datos==3):
-        operante = Decimal(28/3)
+        operante = Decimal(31/3)
     elif(dias_con_datos==4):
-        operante = Decimal(28/4)
+        operante = Decimal(31/4)
     elif(dias_con_datos==5):
-        operante = Decimal(28/5)
+        operante = Decimal(31/5)
     elif(dias_con_datos==6):
-        operante = Decimal(28/6)
+        operante = Decimal(31/6)
     elif(dias_con_datos==7):
-        operante = Decimal(28/7)
+        operante = Decimal(31/7)
 
     print(f"Acumulado kwh: {resultado_total}")
     print(f"Consumo del mes: {round(resultado_total*operante, 6)}")
@@ -111,6 +113,11 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
 fecha_inicio = datetime(2024, 2, 24)
 fecha_fin = datetime(2024, 3, 1)
 medidor_id = "8096"
+
+# fecha_inicio = datetime(2024, 3, 16)
+# fecha_fin = datetime(2024, 3, 22)
+# medidor_id = "8162"
+
 
 # se asignan datos para realizar pruebas
 # debemos asegurarnos de respetar los formatos de fecha

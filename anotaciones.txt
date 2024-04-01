@@ -46,3 +46,6 @@ osea con las líneas
 27_03
 - El reporte y los cálculos a mostra para cada medidor serán proporcionados desde el archivo 'grafico_suma_consumos', que de momento proporciona uno de los gráficos
 con la data obtenida para presentar el reporte
+
+1_04
+- El aplicativo carga los id de cada medidor, debe mostrar el resto de campos
