@@ -1,3 +1,4 @@
+///// main.py (interfaz)
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox, filedialog
@@ -17,7 +18,7 @@ from modelos import DatosMedidorConsumo
 
 # Reportes
 # primer grafico y data
-from reporte_consumos import obtener_consumo_por_medidor_y_rango, generar_grafico_consumo_por_horas
+from grafico_suma_consumos import obtener_consumo_por_medidor_y_rango, generar_grafico_consumo_por_horas
 
 def obtener_medidores_info():
     db = SessionLocal()
@@ -73,40 +74,15 @@ def generar_reportes_one():
     #print(lista_medidores)
 
 def generar_reportes(fecha_inicio, fecha_fin):
-    # Obtiene los identificadores de los medidores seleccionados
-    medidores_seleccionados = [treeview_medidores.item(item, "text") for item in treeview_medidores.selection()]
-    #print("DATA A MODO DE REPORTE")
-    datos_obtenidos = []
-    for medidor_id in medidores_seleccionados:
-        # Llamada a la función en reporte_consumos para obtener los datos de consumo en el rango de fechas especificado
-        datos_consumo = obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id)
-        # Llamada a la función en reporte_consumos para generar el gráfico con los datos de consumo obtenidos
-        #print(datos_consumo)
-        datos_obtenidos.append(datos_consumo)
-
-    for datos in datos_obtenidos:
-            # Insertar cada conjunto de datos como una nueva fila en el treeview_reportes
-            medidor = datos[0]
-            dia = datos[1]
-            mes = datos[2]
-            cant_v = datos[3]
-            desde = datos[4]
-            hasta = datos[5]
-            acum = datos[6]
-            ener_mes = datos[7]
-            hora = datos[8]
-            tipo = datos[9]
-            treeview_reportes.insert("", "end", text=medidor, values=(dia, mes, cant_v, desde, hasta, acum, ener_mes, hora, tipo))
+    medidor_id = treeview_medidores.item(treeview_medidores.selection(), "text")
+    # Llamada a la función en grafico_suma_consumos para obtener los datos de consumo en el rango de fechas especificado
+    datos_consumo = obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id)
+    # Llamada a la función en grafico_suma_consumos para generar el gráfico con los datos de consumo obtenidos
     
     '''se desactiva de momento la presentación del gráfico'''
-        # for widget in reportes_frame.winfo_children():
-        #     widget.destroy()
-        
-        # Insertar los datos en el treeview
-        # for hora, consumo in datos_consumo:
-        #     treeview_reportes.insert("", "end", text=hora, values=(consumo,))
+    for widget in reportes_frame.winfo_children():
+        widget.destroy()
 
-    # fig es lo que te retorna la funcion de generar_grafico_consumo_por_horas, se usaría para mostrar el gráfico en algún frame
     # fig = generar_grafico_consumo_por_horas(datos_consumo)
 
     # if fig!= None:
@@ -178,7 +154,7 @@ def actualizar_lista_medidores():
         treeview_medidores.insert("", "end", text=medidor, values=(primer_registro, ultimo_registro, huecos))
 
 root = tk.Tk()
-root.title("Aplicativo para la campaña de totalizadores")
+root.title("Aplicación de Ejemplo (Totalizadores)")
 root.geometry("1450x800")
 root.config(bg="white")
 icono = tk.PhotoImage(file="./images/fav-icon-ti.png")
@@ -227,61 +203,23 @@ reportes_frame = tk.Frame(notebook, bg="#2f3640", padx=20, pady=20)
 notebook.add(reportes_frame, text="Reportes")
 
 ''' /*/*/*/*/* INICIA CONTENIDO DE DATOS HISTORICOS '''
-datos_historicos_title = tk.Label(datos_historicos_frame, text="Datos Históricos - Perfiles de Carga", bg="#2f3640", fg="white", font=("Arial", 12))
+datos_historicos_title = tk.Label(datos_historicos_frame, text="Datos Históricos", bg="#2f3640", fg="white", font=("Arial", 12))
 datos_historicos_title.pack(side="top", fill="x")
 datos_historicos_title.configure(anchor="w") 
 
-treeview_medidores = Treeview(datos_historicos_frame, columns=("Primer Registro", "Último Registro", "Huecos/Vacios"))
+treeview_medidores = Treeview(datos_historicos_frame, columns=("Primer Registro", "Último Registro", "Huecos/Vacios", "Tipo de Consumo"))
 treeview_medidores.heading("#0", text="Medidor")
 treeview_medidores.heading("#1", text="Primer Registro")
 treeview_medidores.heading("#2", text="Último Registro")
 treeview_medidores.heading("#3", text="Huecos/Vacios")
+treeview_medidores.heading("#4", text="Tipo de Consumo")
 treeview_medidores.pack(expand=True, fill="both")
 ''' /*/*/*/*/* TERMINA CONTENIDO DE DATOS HISTORICOS '''
 
 ''' /*/*/*/*/* INICIA CONTENIDO PARA REPORTES ESTADÍSTICOS '''
-reportes_estadisticos_title = tk.Label(reportes_frame, bg="#2f3640", fg="white", font=("Arial", 12))
+reportes_estadisticos_title = tk.Label(reportes_frame, text="Reportes Estadísticos", bg="#2f3640", fg="white", font=("Arial", 12))
 reportes_estadisticos_title.pack(side="top", fill="x")
-reportes_estadisticos_title.configure(anchor="w", text="Reportes - Perfiles de Carga")
-
-
-# Agrega un botón a la pestaña de reportes_frame
-boton_generar_documento = ttk.Button(reportes_estadisticos_title, text="G. Doc", cursor="hand2")
-boton_generar_documento.pack(side="right")
-
-def sort_column(treeview, col, reverse):
-    data = [(treeview.set(child, col), child) for child in treeview.get_children('')]
-    data.sort(reverse=reverse)
-
-    for index, (val, child) in enumerate(data):
-        treeview.move(child, '', index)
-
-    treeview.heading(col, command=lambda: sort_column(treeview, col, not reverse))
-
-treeview_reportes = ttk.Treeview(reportes_frame, columns=("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9"))
-treeview_reportes.column("#0", width=50)
-treeview_reportes.column("col1", width=50)
-treeview_reportes.column("col2", width=50)
-treeview_reportes.column("col3", width=50)
-treeview_reportes.column("col4", width=50)
-treeview_reportes.column("col5", width=50)
-treeview_reportes.column("col6", width=50)
-treeview_reportes.column("col7", width=50)
-treeview_reportes.column("col8", width=50)
-treeview_reportes.column("col9", width=50)
-
-treeview_reportes.heading("#0", text="Medidor")
-treeview_reportes.heading("col1", text="Dias")
-treeview_reportes.heading("col2", text="Mes")
-treeview_reportes.heading("col3", text="Cant. Vacíos", command=lambda: sort_column(treeview_reportes, "col3", False))
-treeview_reportes.heading("col4", text="Desde")
-treeview_reportes.heading("col5", text="Hasta")
-treeview_reportes.heading("col6", text="Acumulado", command=lambda: sort_column(treeview_reportes, "col6", False))
-treeview_reportes.heading("col7", text="Energía - Mes")
-treeview_reportes.heading("col8", text="Hora max.Demanda", command=lambda: sort_column(treeview_reportes, "col8", False))
-treeview_reportes.heading("col9", text="Tipo de Consumo")
-
-treeview_reportes.pack(expand=True, fill="both")
+reportes_estadisticos_title.configure(anchor="w")
 
 ''' /*/*/*/*/* TERMINA CONTENIDO PARA REPORTES ESTADÍSTICOS '''
 
@@ -295,3 +233,5 @@ except KeyboardInterrupt:
     print("Aplicación interrumpida por el usuario.")
 finally:
     root.destroy()
+
+/*SORTED PARA LOS DATOS DE LOS REPORTES*/

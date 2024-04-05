@@ -30,7 +30,7 @@ def obtener_consumo_por_medidor_y_fecha(fecha, medidor_id):
 
     return datos_consumo
 
-def generar_grafico_consumo_por_horas(fechas, medidor_id):
+def generar_grafico_consumo_por_horas_dias(fechas, medidor_id):
     # Crear el gráfico
     plt.figure(figsize=(10, 6))
 
@@ -56,7 +56,7 @@ def generar_grafico_consumo_por_horas(fechas, medidor_id):
             max_consumo = max(consumos_filtrados)
         else:
             # En caso de que todos los valores sean None, se imprime un mensaje apropiado
-            print("No hay datos de consumo disponibles para la fecha:", fecha)
+            print("No hay datos de consumo disponibles para la fecha:", fecha.date())
             continue
 
         # Graficar los datos de consumo para esta fecha
@@ -73,6 +73,6 @@ def generar_grafico_consumo_por_horas(fechas, medidor_id):
     plt.show()
 
 # Ejemplo de uso
-fechas = [datetime(2024, 2, 24), datetime(2024, 2, 25),datetime(2024, 2, 26), datetime(2024, 2, 27), datetime(2024, 2, 28), datetime(2024, 2, 29), datetime(2024, 3, 1)]
-medidor_id = "8096"
-generar_grafico_consumo_por_horas(fechas, medidor_id)
+# fechas = [datetime(2024, 2, 24), datetime(2024, 2, 25),datetime(2024, 2, 26), datetime(2024, 2, 27), datetime(2024, 2, 28), datetime(2024, 2, 29), datetime(2024, 3, 1)]
+# medidor_id = "8096"
+# generar_grafico_consumo_por_horas_dias(fechas, medidor_id)

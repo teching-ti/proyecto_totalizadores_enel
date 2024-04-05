@@ -1,0 +1,27 @@
+// Se recomienda que el entorno virtual se llame 'venv', de este modo no se tendrían inconvenientes al momento de hacer un gitpush gracias al .gitignore
+/*** Scripts importantes
+'instalar librerías requeridas hasta el momento' 
+pip install -r requirements.txt
+
+'crear archivo de librerias requeridas, también debe ejecutarse en caso de actualizacion'
+pip freeze > requirements.txt
+
+Información recolectada en base a los archivos:
+
+/****----
+- script para crear la base de datos: 
+CREATE TABLE datos_medidor_consumo(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    meter_id VARCHAR(255),
+    date DATE,
+    time TIME,
+    kwh_del DECIMAL(14, 8),
+    kwh_rec DECIMAL(14, 8),
+    kvarh_q1 DECIMAL(14, 8),
+    kvarh_q2 DECIMAL(14, 8),
+    kvarh_q3 DECIMAL(14, 8),
+    kvarh_q4 DECIMAL(14, 8)
+);
+
+- script para eliminar los registros de la base de datos:
+TRUNCATE TABLE datos_medidor_consumo

@@ -1,51 +1,19 @@
-// Se recomienda que el entorno virtual se llame 'venv', de este modo no se tendrían inconvenientes al momento de hacer un gitpush gracias al .gitignore
-/*** Scripts importantes
-'instalar librerías requeridas hasta el momento' 
-pip install -r requirements.txt
-
-'crear archivo de librerias requeridas, también debe ejecutarse en caso de actualizacion'
-pip freeze > requirements.txt
-
-Información recolectada en base a los archivos:
-
-- Se cuenta con dos tipos de archivo de donde se realizará la extracción de información.
-- Estos archivos se encuentran en formato prn y csv. (Es importante desarrollar una tabla de manera general para estos dos tipos de archivo).
-- En al archivo 'relacion totalizadores' se tienen dos columnas importantes: 'suministro y medidor'. Los PRN cuentan con el número de suministro en el medio del nombre del archivo '22230A', y el número de medidor en su primera columna del archivo prn. Esa columna tiene como nombre METER ID. Mientras que los csv, tienen este número de medidor en los primeros dígitos de su primera columna llamanada 'punto de entrega'.
-
-Estos dos tipos de archivos cuentan con fechas y horas, esas son en las que se registra información cada 15 minutos.
-
-- Luego, con esa información obtenida se percibe lo siguiente, por ejemplo a las 00:15:00 horas se obtiene un monto de consumo por día, se obtiene un total general de todo el consumo en esas horas durante 7 días. Osea el monto registrado a las 00:15.00 del día 24/02, 23/02..., 01/03. Entonces se realiza ese proceso por hora y así se obtiene un valor total de cada hora en cuestión 00:15:00, 00:30:00, 00:45:00. Con el total general. (De ahí sale una gráfica)
-
-- Ya con este total general, si se hace una división/7, se obtiene un promedio de kwh. (de aquí sale otra gráfica)
-
-De ambas gráficas es de donde se obtiene el tipo de suministro, uno por cada gráfica.
-
-/****----
-- script para crear la base de datos: 
-CREATE TABLE datos_medidor_consumo(
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    meter_id VARCHAR(255),
-    date DATE,
-    time TIME,
-    kwh_del DECIMAL(14, 8),
-    kwh_rec DECIMAL(14, 8),
-    kvarh_q1 DECIMAL(14, 8),
-    kvarh_q2 DECIMAL(14, 8),
-    kvarh_q3 DECIMAL(14, 8),
-    kvarh_q4 DECIMAL(14, 8)
-);
-
-- script para eliminar los registros de la base de datos:
-truncate table datos_medidor_consumo
-
 /****-----
-23_03
-Se agregó un db.rollback() para cuando se reconozca un error en el proceso, lo que hace este rollback es deshacer lo instanciado para la base de datos en un archivo,
-osea con las líneas
+4_04  (Perfiles de Carga)
+*** Archivo 'reporte_consumos.py', la función retorna la lista de data necesaria para gestionar los reportes
+*** Archivo 'main.py', el archivo encargado de la interfaz recibe los datos del archivo anterior desde la función generar_reportes(), todos estos datos se guardan en la lista 'datos_obtenidos', con una función todos estos datos se insertan en el treeview respectivo para que aparezcan en la interfaz dentro de la pestaña de reportes.
+
+
+3_04
+- Se debe poder seleccionar más de un medidor para obtener la información histórica de dicho medidor en la pestaña de reportes con los campos requeridos siguiendo la plantilla del wireframe...ok
+
+1_04
+- El aplicativo carga los id de cada medidor (en la ventana principal), debe mostrar el resto de campos...ok
 
 27_03
 - El reporte y los cálculos a mostra para cada medidor serán proporcionados desde el archivo 'grafico_suma_consumos', que de momento proporciona uno de los gráficos
-con la data obtenida para presentar el reporte
+con la data obtenida para presentar el reporte...ok
 
-1_04
-- El aplicativo carga los id de cada medidor, debe mostrar el resto de campos
+23_03
+Se agregó un db.rollback() para cuando se reconozca un error en el proceso, lo que hace este rollback es deshacer lo instanciado para la base de datos en un archivo,
+osea con las líneas...ok

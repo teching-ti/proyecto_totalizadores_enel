@@ -38,9 +38,9 @@ def evaluar_guardar_archivos(lista_rutas):
                     
                     # se lee el archivo linea por linea
                     for line in archivo:
-
                         # separa los valores de la línea por comas y elimina los espacios en blanco que se encuentra entre cada dato
                         # los guarda dentro de una lista llamada 'values'
+
                         values = [value.strip() for value in line.split(separador)]
                         #print(values)
                         
@@ -98,14 +98,15 @@ def evaluar_guardar_archivos(lista_rutas):
                             date_str = values[1].strip('"')
 
                             # convierte la fecha al formato de la base de datos (YYYY-MM-DD)
-                            date = datetime.strptime(date_str, '%d/%m/%y').date()
-
+                            if len(date_str.split("/")[-1])<4:
+                                date = datetime.strptime(date_str, '%d/%m/%y').date()
+                            else:
+                                date = datetime.strptime(date_str, '%d/%m/%Y').date()
                             #es necesario modificar los datos de la hora para que se guarde como tal, el archivo nos lo proporciona como un texto
                             #y es importante guardarlo como el tipo de dato correcto.
                             # sucede algo más, y es que para el campo de hora, los archivos prn, manejan el 24:00, se debe convertir a 00:00:00
                             # se retiran las comillas
                             time_str = values[2].strip('"')
-
                             # se valida que el dato inicie con 24
                             if time_str.startswith('24:'):
 
@@ -131,7 +132,6 @@ def evaluar_guardar_archivos(lista_rutas):
                                 kvarh_q3=float(values[8]) if values[8] else None,
                                 kvarh_q4=float(values[9]) if values[9] else None,
                             )
-
                         # estas líneas verifican si ya existe un registro con la misma clave primaria antes de poder insertar
                         # se busca por medio de una consulta usando parámetros del nuevo dato, si es que estos ya existen
                         # entonces devolverá información y se guardará en la variable 'existing_record', en caso de que no
