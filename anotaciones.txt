@@ -1,4 +1,15 @@
 /****-----
+5_04 (Tipo de suministro)
+*** Se espera recibir el tipo de suministro, en el archivo "reporte_consumos.py" se encuentra en desarollo la acciòn, la idea es encontrar un consumo general entre tres rangos
+de hora para que con esa informaciòn se hagan las comparaciones adecuadas:
+de 6 a 12, 14 a 18, 18:15 a 22:15
+TIPO DE SUMINISTRO
+Residencial: Carga constante hasta las 6 pm , luego se incrementa 
+Industrial: Dos picos , el primer pico de consumo desde las 6am hasta las 12-1 pm y luego el segundo pico de consumo desde las 2 pm hasta 6 pm.
+Comercial :Ligero incremento de consumo desde las 8 am hasta las 6 pm 
+***
+
+
 4_04  (Perfiles de Carga)
 *** Archivo 'reporte_consumos.py', la función retorna la lista de data necesaria para gestionar los reportes
 *** Archivo 'main.py', el archivo encargado de la interfaz recibe los datos del archivo anterior desde la función generar_reportes(), todos estos datos se guardan en la lista 'datos_obtenidos', con una función todos estos datos se insertan en el treeview respectivo para que aparezcan en la interfaz dentro de la pestaña de reportes.

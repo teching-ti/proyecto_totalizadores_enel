@@ -5,11 +5,12 @@ from modelos  import DatosMedidorConsumo
 import matplotlib.pyplot as plt
 from decimal import Decimal
 import calendar
+import numpy as np
 
 def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
 
     sumatoria_total = []
-    # Consulta a la base de datos
+    # consulta a la base de datos
     consulta = session.query(
     DatosMedidorConsumo.date,
     func.HOUR(DatosMedidorConsumo.time).label('hora'),
@@ -63,29 +64,39 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     datos_consumo = [(resultado.hora, resultado.minuto, resultado.consumo) for resultado in resultados]
 
     ''' /*********************************/Desde este punto se obtendrán datos para realizar el reporte\*********************************'''
-    # Diccionario para almacenar el consumo total por hora
+    # almacenará el consumo total por cada hora del día
     consumo_por_hora = {}
+
+    # almacenará los valores totales ya sumados
     sumatoria_total = []
 
-    # Recorrer los resultados y calcular el consumo total por hora
+    # se recorre la lista de resultados, se brinda información sobre la hora, minuto y consumo asociado
     for resultado in resultados:
         hora = resultado.hora
         minuto = resultado.minuto
         consumo = resultado.consumo
 
-        # Calcular la hora redondeada hacia abajo al cuarto de hora más cercano
+        # calcular la hora redondeada hacia abajo al cuarto de hora más cercano
         hora_redondeada = hora + minuto / 60
 
-        # Sumar el consumo total al total de esa hora
-        #consumo_por_hora[hora_redondeada] = consumo_por_hora.get(hora_redondeada, 0) + consumo_total
+        # se suma al diccionario el consumo al total de la hora que se esta evaluando
         if consumo is not None:
             consumo_por_hora[hora_redondeada] = consumo_por_hora.get(hora_redondeada, 0) + consumo
 
-
-    # Imprimir los resultados
+    # se agrega el dato de consumo por hora
+    datos_consumo_por_hora = []
+    print(medidor_id)
+    # se ordena la hora para mejor visualización de los datos
     for hora_redondeada, consumo in sorted(consumo_por_hora.items()):
         hora = int(hora_redondeada)
         minutos = int((hora_redondeada % 1) * 60)
+
+        '''se agrega elemento para validar la información de los suministros'''
+        # se agrega el dato de consumo por hora
+        datos_consumo_por_hora.append((hora, minutos, consumo))
+        '''se agrega elemento para validar la información de los suministros'''
+
+
         # aqui se obtienen los valores totales ya sumados
         '''
         DEVUELVE INFORMACIÓN SIMILAR A ESTA, LA CUAL SERÍA DATA YA SUMADA EN DONDE EL VALOR DEL 00:00 ES LA SUMA DE TODOS LOS DÍAS
@@ -93,19 +104,33 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
         00:15 0.16467500
         00:30 0.15812500
         '''
-        #print(f"{hora:02d}:{minutos:02d}", consumo)
-        sumatoria_total.append(consumo)
+        # consumo sería el valor número del conjunto de días sumados, pero en base a una hora en específico
+        # por esa razón es necesario que en cada bucle se añada a la lista 'suma_total'
+        print(f"{hora:02d}:{minutos:02d}", consumo)
+        # se extrae el valor de conusmo y se agrega a la lista sumatoria total, esto representará el consumo total por horas
+        sumatoria_total.append(consumo)   
+    #print(datos_consumo_por_hora)
+
+    '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO INICIA'''
     
+    
+    tipo_suministro = ""
+
+    
+    print(tipo_suministro)
+    '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO TERMINA'''
+
     #print(f"Esta es la sumatoria total de datos vacios: {sumatoria_total}")
 
     # Encontrar la hora con el máximo consumo y su valor correspondiente
-    # hora
     hora_max_consumo = max(consumo_por_hora, key=consumo_por_hora.get)
     # valor de máximo consumo con dicha hora
     # max_consumo = consumo_por_hora[hora_max_consumo]
 
-    # se crea una variable que almacenará la suma de los elementos en la lista
+    # se crea una variable que almacenará la suma de los elementos en la lista, lo que sería el acumulado en todo el rango de fechas seleccionado
     resultado_total = sum(sumatoria_total)
+
+
     # consulta para obtener el numero de días de los que se tiene registro en el rango de fechas seleccionado
     consulta_numero_dias = session.query(
         # cuenta los días únicos en los que se registraron lecturas
@@ -162,7 +187,6 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
         dias_mes = min(dias_mes, 28)
     '''agregado final'''
     #print(dias_mes)
-
 
     ''' Datos de vacíos '''
     contador_vacios = 0
