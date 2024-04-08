@@ -1,8 +1,18 @@
 /****-----
+08_04 Mensajes de alerta corregidos, se puede generar el reporte de manera exitosa, solucionado el inconveniente de fechas y el último element ode la fila que no podría convertirse a dato de excel, se ignora ese último elemento en la lista retornada, ya que no sería requerido 
+
+/****-----
+6_04 Debido a que ahora en la lista de datos para el reporte, también se devuelve la lista de medidores cuyas fechas solicitades exceden las fechas del registro se esta trayendo
+un mayor número de elementos en esa lista, la función para generar excel usa esa misma lista, esto estaría ocasionando problemas para generar el reporte en excel(si retiramos
+este último elemento de la lista de datos, volverá a generar el reporte en excel de la misma manera como lo generaba con anterioridad)....(REVISIÓN)
+
+/****-----
 5_04 (Tipo de suministro)
 *** Se espera recibir el tipo de suministro, en el archivo "reporte_consumos.py" se encuentra en desarollo la acciòn, la idea es encontrar un consumo general entre tres rangos
 de hora para que con esa informaciòn se hagan las comparaciones adecuadas:
 de 6 a 12, 14 a 18, 18:15 a 22:15
+(desde las 8am a 9am hubo aumento y de 6pm a 7pm hubo disminuciòn, comercial)
+
 TIPO DE SUMINISTRO
 Residencial: Carga constante hasta las 6 pm , luego se incrementa 
 Industrial: Dos picos , el primer pico de consumo desde las 6am hasta las 12-1 pm y luego el segundo pico de consumo desde las 2 pm hasta 6 pm.

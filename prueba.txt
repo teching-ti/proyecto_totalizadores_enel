@@ -235,3 +235,7 @@ finally:
     root.destroy()
 
 /********
+
+hora_actual = 16.0  # Supongamos que son las 4:00 PM
+
+

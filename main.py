@@ -96,6 +96,8 @@ def abrir_ventana_periodo():
     global seleccion_fecha_fin
     ventana_periodo = tk.Toplevel()
     ventana_periodo.title("Periodo")
+
+    ventana_periodo.resizable(0,0)
     
     # label y selección de fecha de inicio
     label_fecha_inicio = ttk.Label(ventana_periodo, text="Fecha de inicio:")
@@ -127,14 +129,31 @@ def generar_reportes_periodo():
     # se cierra la nueva ventana tras haber seleccionado las fechas de manera exitosa
     ventana_periodo.destroy()
     # se ejecuta la última función, se pasan las fechas como argmentos
+
     generar_reportes(fecha_inicio, fecha_fin)
+
+    ''' Luego de haber generado los reportes en la interfaz, esta sección mostrará en un mensaje de alerta el id de los medidores que no tengan registros en todas las fechas
+    seleccionadas; sin embargo de la misma manera muestra el reporte ya que al menos cuenta con data en los días iniciales'''
+    id_medidores_fechas_excedentes = ""
+    # con esta condición se evalúa si existe una cantidad de datos en el arreglo que contiene a los medidores cuyas de selección se exceden a las de registro
+    if(len(datos_medidores_fechas)>=1):
+        for dato_fecha in datos_medidores_fechas:
+            id_medidores_fechas_excedentes+= f" - {dato_fecha} "
+
+        messagebox.showinfo("Medidores sin registros en el rango de fechas seleccionadas", id_medidores_fechas_excedentes)
 
 # se crea una variable global para luego poder usar la información que devuelva la función 'generar_reportes'
 datos_obtenidos_globales = []
+
+# se crea esta variable global, TENDRÁ LOS MEDIDORES CUYAS FECHAS DE SOLICITUD A LAS FECHAS DE REGISTRO
+datos_medidores_fechas = ""
+
 # función generar reportes, usando las fechas como arugmentos para otra función de se encuentra en 'reporte_cosumos'
 def generar_reportes(fecha_inicio, fecha_fin):
 
     global datos_obtenidos_globales
+    global datos_medidores_fechas
+
     # obtiene los identificadores de los medidores seleccionados
     medidores_seleccionados = [treeview_medidores.item(item, "text") for item in treeview_medidores.selection()]
     #print("DATA A MODO DE REPORTE")
@@ -149,8 +168,11 @@ def generar_reportes(fecha_inicio, fecha_fin):
         # se agrega en la lista todas listas devuelvas al ejecutar la función en el archivo de reporte
         datos_obtenidos.append(datos_consumo)
 
+    #print(datos_obtenidos)
+
     # iterando la lista de datos
-    for datos in datos_obtenidos:
+    try:
+        for datos in datos_obtenidos:
             # se inserta cada conjunto de datos como una nueva fila en el treeview_reportes
             medidor = datos[0]
             dia = datos[1]
@@ -163,10 +185,14 @@ def generar_reportes(fecha_inicio, fecha_fin):
             hora = datos[8]
             tipo = datos[9]
             treeview_reportes.insert("", "end", text=medidor, values=(dia, mes, cant_v, desde, hasta, acum, ener_mes, hora, tipo))
-    
-    # se guarda en la variable global la lista de datos obtenidos
-    datos_obtenidos_globales = datos_obtenidos
-    
+                
+        datos_medidores_fechas = (datos_obtenidos[-1][-1])
+            # se guarda en la variable global la lista de datos obtenidos
+        datos_obtenidos_globales = datos_obtenidos
+    except:
+        messagebox.showwarning("Aviso", "No se pudo completar la operación, inténtelo nuevamente y revise los rangos de fecha seleccionados")
+
+
     '''se desactiva de momento la presentación del gráfico'''
         # for widget in reportes_frame.winfo_children():
         #     widget.destroy()
@@ -197,7 +223,9 @@ def verificar_y_generar_excel():
 def generar_excel():
     # uso de la variable global declarada anteriormente
     global datos_obtenidos_globales
+    #print(datos_obtenidos_globales)
     # se crear un nuevo libro de Excel vacío
+
     workbook = openpyxl.Workbook()
     # obtiene la hoja activa del libro 'por defecto es la primera'
     sheet = workbook.active
@@ -214,10 +242,11 @@ def generar_excel():
 
     # recorre los datos de la lista datos_obtenidos_globales, que contiene los datos recibidos
     for row, datos in enumerate(datos_obtenidos_globales, start=2):
-        # se recorre cada elemento independiente de la lista datos
-        for col, dato in enumerate(datos, start=1):
-            # cada valor de instroduce en una fila y columna usando el método cell
-            sheet.cell(row=row, column=col, value=dato)
+        # Si hay datos y la longitud de la lista es mayor que 1
+        if datos and len(datos) > 1:
+            # se recorre cada elemento independiente de la lista datos
+            for col, dato in enumerate(datos[:-1], start=1):  # Excluye el último elemento
+                sheet.cell(row=row, column=col, value=dato)
 
     # se guardar el archivo Excel
     # se pregunta por el nombre del archivo y su ubicación
