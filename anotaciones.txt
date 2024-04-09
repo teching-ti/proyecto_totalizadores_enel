@@ -1,5 +1,31 @@
 /****-----
-08_04 Mensajes de alerta corregidos, se puede generar el reporte de manera exitosa, solucionado el inconveniente de fechas y el último element ode la fila que no podría convertirse a dato de excel, se ignora ese último elemento en la lista retornada, ya que no sería requerido 
+9_04 Reunión, presentación de avance (aplicativo medidores totalizadores enel)
+apuntes:
+
+* Modificación de interfaz para seleccionar entre tipo de perfil a importar (perfil de carga - perfil de instrumentación)
+(En el apartado visual donde se meustran los datos históricos, se deben mostrar los registros de perfil de carga y de perfil de instrumentación)
+
+* Se requiere de la creación de una nueva tabla para almacenar perfiles de instrumentación
+* Se requiere de crear validaciones para estas estructuras que serían los perfiles de validación
+* Se requiere implementar validaciones y limpieza de datos para almacenar esta información de manera adecuada
+* Se requiere de implementar lógica para diferenciar entre perfiles de carga y perfiles de instrumentación en base a sus datos
+* Se deben usar los campos de 'current', corriente
+* Se requiere de agregar funciones para obtener cálculos
+* Y en base a ello poder generar gráficas
+* Se requiere de implementar funciones para identificar el tipo de consumo
+* El usuario podría manejar distintos datos, pero se plantea generar reportes de perfiles de carga y al mismo tiempo generar las gráficas y guardarlas
+en una carpeta ordenada. Por lo tanto cuando haga click en "Generar" con los medidores y fechas seleccionadas se le proporcionaría "reporte en archivo excel con la información mostrada en la presentación del avance junto con las gráficas de las corrientes por promedio y días"
+
+
+
+"Importación de datos a la db"
+- creación de una tabla para guardar información de perfiles de instrumentación
+- El aplicativo debe reconocer el tipo de perfil del que se esta haciendo uso al momento de importar la data, y colocarlo en una tabla diferente.
+- Se debe generar una gráfica promedio y una gráfica de días
+(  )
+
+/****-----
+8_04 Mensajes de alerta corregidos, se puede generar el reporte de manera exitosa, solucionado el inconveniente de fechas y el último element ode la fila que no podría convertirse a dato de excel, se ignora ese último elemento en la lista retornada, ya que no sería requerido 
 
 /****-----
 6_04 Debido a que ahora en la lista de datos para el reporte, también se devuelve la lista de medidores cuyas fechas solicitades exceden las fechas del registro se esta trayendo

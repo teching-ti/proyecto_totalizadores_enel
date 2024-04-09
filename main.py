@@ -317,6 +317,17 @@ logo = tk.PhotoImage(file="./images/logo_teching.png")
 menu_titulo = tk.Label(menu_frame, image=logo ,compound=tk.LEFT, font=("Arial", 14), bg="#2f3640", fg="white")
 menu_titulo.pack(pady=35)
 
+# se agrega un combobox para poder seleccionar con que tipo de perfil desea interactuar el usuario
+combo = ttk.Combobox(
+    menu_frame,
+    state="readonly",
+    values=["Perfiles de Carga", "Perfiles de Instrumentación"],
+    width=26
+)
+
+combo.set("Perfiles de Carga")
+combo.pack(pady=25, padx=20)
+
 # se cargan los íconos para los botones
 icono1 = tk.PhotoImage(file="images/img1.png")
 imagen1 = icono1

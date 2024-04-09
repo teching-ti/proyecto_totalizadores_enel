@@ -9,6 +9,7 @@ import numpy as np
 resultado_fechas = []
 
 def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
+    
     # try:
     sumatoria_total = []
     # consulta a la base de datos
@@ -126,132 +127,8 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
         # se extrae el valor de conusmo y se agrega a la lista sumatoria total, esto representará el consumo total por horas
         sumatoria_total.append(consumo)
 
-
     #print(datos_consumo_por_hora)
-
-    '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO INICIA'''
-    # tipo de suministro en base a sus horas intentando hallar picos de consumo, 
-    # valores_horas es la lista que contendrá los consumos por horas
-
-
-    # esta sección indica lo siguiente
-    # si los valores de 5-6 pm son mayores que de 7-8pm
-    # y si los valores de 6-7 am son menores  que los de 8-9
-    # se trata de un consumo comercial
-
-    # valores pm
-    suma_valores_7_8_pm = 0
-    suma_valores_5_6_pm = 0
-    #valores am
-    suma_valores_8_9_am = 0
-    suma_valores_6_7_am = 0
-
-    suma_valores_6_12 = 0
-    suma_valores_14_18 = 0
-
-    suma_valores_11_15 = 0
-    
-    for dato in valores_horas:
-        hora = int(dato.split(':')[0])  # se extrae la hora como dato de tipo entero
-        if 6 <= hora < 12:  # verifica si está entre las 6 am y las 12 pm
-            valor = float(dato.split()[1])  # extraer el valor como un número flotante
-            suma_valores_6_12 += valor
-        elif hora == 12:  # si la hora es exactamente 12:00 pm, se suma el valor y se sale del bucle
-            # ya que esto representría que se ha llegado a la útlima hora
-            valor = float(dato.split()[1])  # extraer el valor como un número flotante
-            suma_valores_6_12 += valor
-            break
-            
-        
-    for dato in valores_horas:
-        hora = int(dato.split(':')[0])  # Extraer la hora como entero
-        if 14 <= hora < 18:  # Verificar si está entre las 14:00 y las 18:00 (no inclusive)
-            valor = float(dato.split()[1])  # Extraer el valor como un número flotante
-            suma_valores_14_18 += valor
-
-        elif hora == 18:  # si la hora es exactamente 12:00 pm, se suma el valor y se sale del bucle
-            # ya que esto representría que se ha llegado a la útlima hora
-            valor = float(dato.split()[1])  # extraer el valor como un número flotante
-            suma_valores_14_18 += valor
-            break
-
-    suma_valores_18_22 = 0
-    omitir_primer_valor = True  # Bandera para omitir el primer valor de las 18:00
-    for dato in valores_horas:
-        hora_minuto, valor = dato.split()  # Separar la hora y el valor
-        hora, minutos = hora_minuto.split(':')  # Separar la hora y los minutos
-        hora = int(hora)  # Convertir la hora a entero
-        minutos = int(minutos)  # Convertir los minutos a entero
-        if omitir_primer_valor:
-            if hora == 18 and minutos == 0:
-                omitir_primer_valor = False  # Cambiar la bandera para empezar a sumar desde 18:15
-            continue
-        if hora == 18 and minutos >= 15:
-            suma_valores_18_22 += float(valor)
-        elif 19 <= hora < 22:  # Verificar si está entre las 19:00 y las 23:00 (no inclusive)
-            suma_valores_18_22 += float(valor)
-        elif hora == 22 and minutos == 0:
-            suma_valores_18_22 += float(valor)
-            break
-    
-    for dato in valores_horas:
-        hora = int(dato.split(':')[0])  # Extraer la hora como entero
-        valor = float(dato.split()[1])  # Extraer el valor como un número flotante
-        
-        # Sumar valores para PM
-        if 17 <= hora < 18:
-            suma_valores_5_6_pm += valor
-        elif 19 <= hora < 20:
-            suma_valores_7_8_pm += valor
-        
-        # Sumar valores para AM
-        elif 8 <= hora < 9:
-            suma_valores_8_9_am += valor
-        elif 6 <= hora < 7:
-            suma_valores_6_7_am += valor
-
-    for dato in valores_horas:
-        hora = int(dato.split(':')[0])  # Extraer la hora como entero
-        if 11 <= hora < 15:  # Verificar si está entre las 14:00 y las 18:00 (no inclusive)
-            valor = float(dato.split()[1])  # Extraer el valor como un número flotante
-            suma_valores_11_15 += valor
-
-        elif hora == 15:  # si la hora es exactamente 12:00 pm, se suma el valor y se sale del bucle
-            # ya que esto representría que se ha llegado a la útlima hora
-            valor = float(dato.split()[1])  # extraer el valor como un número flotante
-            suma_valores_11_15 += valor
-            break
-
-    if(suma_valores_18_22>suma_valores_6_12 and suma_valores_18_22>suma_valores_14_18):
-            print("Tipo de consumo residencial")
-    else:
-        if(suma_valores_6_12>suma_valores_18_22 and suma_valores_6_12>suma_valores_11_15 and suma_valores_14_18>suma_valores_18_22 and suma_valores_14_18>suma_valores_11_15):
-            print("Tipo de consumo industrial")
-
-        if(suma_valores_5_6_pm > suma_valores_7_8_pm and suma_valores_8_9_am > suma_valores_6_7_am and suma_valores_6_12>suma_valores_18_22 and suma_valores_14_18>suma_valores_18_22):
-            print("Tipo de consumo: Comercial")
-        
-        
-
-    print("La suma de los valores desde las 6 am hasta las 12 pm es:", suma_valores_6_12)
-    print("La suma de los valores desde las 14 pm hasta las 18 pm es:", suma_valores_14_18)
-    print("La suma de los valores desde las 18:15 pm hasta las 23 pm es:", suma_valores_18_22)
-
-
-    # se debe usar la variable sumatoria_total
-    #print(tipo_suministro)
-    '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO TERMINA'''
-
     #print(f"Esta es la sumatoria total de datos vacios: {sumatoria_total}")
-    # Encontrar la hora con el máximo consumo y su valor correspondiente
-    hora_max_consumo = max(consumo_por_hora, key=consumo_por_hora.get)
-    # valor de máximo consumo con dicha hora
-    # max_consumo = consumo_por_hora[hora_max_consumo]
-
-    # se crea una variable que almacenará la suma de los elementos en la lista, lo que sería el acumulado en todo el rango de fechas seleccionado
-    resultado_total = sum(sumatoria_total)
-    # sumatoria total 
-
 
     # consulta para obtener el numero de días de los que se tiene registro en el rango de fechas seleccionado
     consulta_numero_dias = session.query(
@@ -326,22 +203,46 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
             # Almacenar la fecha y hora del último vacío en cada iteración
             fecha_hora_ultimo_vacio = f"{resultado.date} {resultado.hora}:{resultado.minuto}"
 
+    # Encontrar la hora con el máximo consumo y su valor correspondiente
+    hora_max_consumo = max(consumo_por_hora, key=consumo_por_hora.get)
+    hora_max = int(hora_max_consumo)
+    min_max = int((hora_max_consumo % 1) * 60)
+
+    # hora en la que se registra una mayor cantidad de consumo, sumando todos los días seleccionados
+    hora_max_formateada =  f"{hora_max}:{min_max:02}"
+    # valor de máximo consumo con dicha hora
+    # max_consumo = consumo_por_hora[hora_max_consumo]
+
+    '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO INICIA'''
+    # Variable para almacenar el tipo de consumo
+    print(f"Hora maxima, {hora_max_formateada}")
+
+    if 18 <= hora_max < 23:
+        tipo_consumo = "Residencial"
+    elif 6 <= hora_max < 18:
+        tipo_consumo = "Industrial/ Comercial (En proceso)"
+    else:
+        tipo_consumo = "Desconocido"
+    print(tipo_consumo)
+        
+    '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO TERMINA'''
+
+    # se crea una variable que almacenará la suma de los elementos en la lista, lo que sería el acumulado en todo el rango de fechas seleccionado
+    resultado_total = sum(sumatoria_total)
+    # sumatoria total 
+
     if resultado_total != 0:
         if dias_con_datos == 1:
             operante = Decimal(dias_mes)
         else:
+            # número de días que posee el mes dividido por el número de días con datos
             operante = Decimal(dias_mes / (dias_con_datos))
         
         # consumo total del mes
         consumo_mes = round(resultado_total * operante, 6)
-        
-        # hora en la que se registra una mayor cantidad de consumo, sumando todos los días seleccionados
-        hora_max = int(hora_max_consumo)
-        min_max = int((hora_max_consumo % 1) * 60)
-        hora_max_formateada =  f"{hora_max}:{min_max:02}"
-
+    
         # es importante obtener el tipo de consumo
-        tipo_consumo = "En proceso"
+        #tipo_consumo = "En proceso"
 
         #hora de maximo consumo
         lista_resultados = [medidor_id, dias_con_datos, mes_predominante, contador_vacios, fecha_hora_primer_vacio, fecha_hora_ultimo_vacio, resultado_total, consumo_mes, hora_max_formateada, tipo_consumo, resultado_fechas]
