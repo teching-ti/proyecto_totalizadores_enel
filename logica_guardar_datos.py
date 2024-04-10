@@ -1,23 +1,29 @@
 import os
 from datetime import datetime, timedelta
-from modelos import DatosMedidorConsumo
+from modelos import DatosMedidorConsumo, DatosMedidorInstrumentacion
 from db import SessionLocal
 import re
 
+# Evaluar los perfiles de carga para realizar el guardado en la db
+
+'''
+Desarollar script para cargar excel con medidores y factores (definir columnas para insertar solo datos correspondientes)
+UPDATE `medidores` SET `id`='[value-1]',`factor`='[value-2]' WHERE 1
+->Script para actualizar el valor de cada medidor, 60, 100, 140, 200, 300, 400
+'''
+
 def evaluar_guardar_archivos(lista_rutas):
+    perfil = ""
     # creacion de la sesion para acceder a la base de datos
     archivos_no_validos = []
     db = SessionLocal()
     for ruta in lista_rutas:
-
         # con el dato de la ruta se obtiene solo el nombre del archivo
         nombre_archivo = os.path.basename(ruta)
         print(f"Analizando: {ruta}")
-
         # se obtiene la extension del archivo
         extension_archivo = os.path.splitext(nombre_archivo)[1]
         try:
-
             ''' CONDICION PARA EVALUAR SI UN ARCHIVO DEBE SER PROCESADO '''
             # estas condiciones podrían ser modificadas en base al nombre del archivo, depende de los archivos como tal
             # estas condiciones buscan que si un archivo es csv, su nombre debe iniciar con EDP, y si el archivo es prn su nombre debe iniciar con a
@@ -46,10 +52,11 @@ def evaluar_guardar_archivos(lista_rutas):
                         
                         ''' ESTA CONDICION SOLO APLICA A LOS ARCHIVOS DE EXTENSIÓN CSV '''
                         if(extension_archivo == '.csv'):
-
+                            perfil = "carga"
                             # la variable 'identificador_elster' usa una expresión regular que eliminará todos los caracteres excepto los primeros numeros de values[0]
                             # osea del dato que se encuentra en la primera columna de cada fila
                             # luego ese dato que vendría a ser el identificador del meter se agrega como dato para guardar
+                            '''modificacion para los perfiles de carga'''
                             meter_id_modificado = re.search(r'(\d+)', values[0]).group(1)
 
                             # se guarda en la variable date_str el valor de fecha que llega desde el archivo
@@ -87,72 +94,163 @@ def evaluar_guardar_archivos(lista_rutas):
                             )
                             
                         elif(extension_archivo == '.prn'):
+                            # perfiles de instrumentación
+                            if nombre_archivo.endswith("_1.prn"):
 
-                            ''' ESTA CONDICION SOLO APLICA A LOS ARCHIVOS DE EXTENSIÓN PRN '''
-                            # el identificador del meter es modificado para que no posee comillas ni espacios
-                            meter_id_modificado = values[0].strip('" ')
+                                perfil = "instrumentacion"
+                                # se realizan modiifcaciones en la logica de guardar datos.
+                                # se debe revisar cuantas columnas se tiene en la primera fila, de ser mayores que 13 entonces tiene A, B y C,
+                                # la lógica debería de ser diferente según el caso
 
-                            # este metodo se ejecuta solo si el valor de fecha tiene una " por delante, osea si tiene el formato que traen los prn
-                            # values[1] representa a la columna de fecha
-                            # se retiran las comillas y se guardan en date_str
-                            date_str = values[1].strip('"')
+                                meter_id_modificado = values[0].strip('" ')
+                                date_str = values[1].strip('"')
 
-                            # convierte la fecha al formato de la base de datos (YYYY-MM-DD)
-                            if len(date_str.split("/")[-1])<4:
-                                date = datetime.strptime(date_str, '%d/%m/%y').date()
+                                # convierte la fecha al formato de la base de datos (YYYY-MM-DD)
+        
+                                if len(date_str.split("/")[-1])<4:
+                                    date = datetime.strptime(date_str, '%d/%m/%y').date()
+                                else:
+                                    date = datetime.strptime(date_str, '%d/%m/%Y').date()
+                                
+                                #es necesario modificar los datos de la hora para que se guarde como tal, el archivo nos lo proporciona como un texto
+                                #y es importante guardarlo como el tipo de dato correcto.
+                                # sucede algo más, y es que para el campo de hora, los archivos prn, manejan el 24:00, se debe convertir a 00:00:00
+                                # se retiran las comillas
+                                time_str = values[2].strip('"')
+                                # se valida que el dato inicie con 24
+                                if time_str.startswith('24:'):
+
+                                    # aumenta en 1 el día cuando se llega a las 24 horas
+                                    date += timedelta(days=1)
+
+                                    # reemplaza el 24 por 00 desde antes del indice 2 de la cadena
+                                    time_str = '00' + time_str[2:]
+                                # se guarda la cadena en un formato de tipo time    
+                                time_obj = datetime.strptime(time_str, '%H:%M').time()
+
+                                if len(values)>13:
+                                    data = DatosMedidorInstrumentacion(
+                                        meter_id=meter_id_modificado,
+                                        date=date,
+                                        time=time_obj,
+                                        int_len=float(values[3]) if values[3] else None,
+                                        average_phase_a_voltage = float(values[4]) if values[4] else None,
+                                        average_phase_b_voltage = float(values[5]) if values[5] else None,
+                                        average_phase_c_voltage = float(values[6]) if values[6] else None,
+                                        average_phase_a_current = float(values[7]) if values[7] else None,
+                                        average_phase_b_current = float(values[8]) if values[8] else None,
+                                        average_phase_c_current = float(values[9]) if values[9] else None,
+
+                                        end_phase_a_pf = float(values[10]) if values[10] else None,
+                                        end_phase_b_pf = float(values[11]) if values[11] else None,
+                                        end_phase_c_pf = float(values[12]) if values[12] else None,
+
+                                        average_line_frequency = float(values[13]) if values[13] else None,
+
+                                        average_phase_a_kw = float(values[14]) if values[14] else None,
+                                        average_phase_b_kw = float(values[15]) if values[15] else None,
+                                        average_phase_c_kw = float(values[16]) if values[16] else None,
+                                    )
+                                else:
+                                    # print(values)
+                                    # se debe crear una variable data diferente
+                                    data = DatosMedidorInstrumentacion(
+                                        meter_id=meter_id_modificado,
+                                        date=date,
+                                        time=time_obj,
+                                        int_len=float(values[3]) if values[3] else None,
+                                        average_phase_a_voltage = float(values[4]) if values[4] else None,
+                                        average_phase_b_voltage = None,
+                                        average_phase_c_voltage = float(values[5]) if values[5] else None,
+                                        average_phase_a_current = float(values[6]) if values[6] else None,
+                                        average_phase_b_current = None,
+                                        average_phase_c_current = float(values[7]) if values[7] else None,
+
+                                        end_phase_a_pf = float(values[8]) if values[8] else None,
+                                        end_phase_b_pf = None,
+                                        end_phase_c_pf = float(values[9]) if values[9] else None,
+
+                                        average_line_frequency = float(values[10]) if values[10] else None,
+
+                                        average_phase_a_kw = float(values[11]) if values[11] else None,
+                                        average_phase_b_kw = None,
+                                        average_phase_c_kw = float(values[12]) if values[12] else None,
+                                    )
+                            
+                            #perfiles de carga prn
                             else:
-                                date = datetime.strptime(date_str, '%d/%m/%Y').date()
-                            #es necesario modificar los datos de la hora para que se guarde como tal, el archivo nos lo proporciona como un texto
-                            #y es importante guardarlo como el tipo de dato correcto.
-                            # sucede algo más, y es que para el campo de hora, los archivos prn, manejan el 24:00, se debe convertir a 00:00:00
-                            # se retiran las comillas
-                            time_str = values[2].strip('"')
-                            # se valida que el dato inicie con 24
-                            if time_str.startswith('24:'):
+                                perfil = "carga"
+                                ''' ESTA CONDICION SOLO APLICA A LOS ARCHIVOS DE EXTENSIÓN PRN '''
+                                # el identificador del meter es modificado para que no posee comillas ni espacios
+                                meter_id_modificado = values[0].strip('" ')
 
-                                # aumenta en 1 el día cuando se llega a las 24 horas
-                                date += timedelta(days=1)
+                                # este metodo se ejecuta solo si el valor de fecha tiene una " por delante, osea si tiene el formato que traen los prn
+                                # values[1] representa a la columna de fecha
+                                # se retiran las comillas y se guardan en date_str
+                                date_str = values[1].strip('"')
 
-                                # reemplaza el 24 por 00 desde antes del indice 2 de la cadena
-                                time_str = '00' + time_str[2:]
-                            # se guarda la cadena en un formato de tipo time    
-                            time_obj = datetime.strptime(time_str, '%H:%M').time()
+                                # convierte la fecha al formato de la base de datos (YYYY-MM-DD)
+                                if len(date_str.split("/")[-1])<4:
+                                    date = datetime.strptime(date_str, '%d/%m/%y').date()
+                                else:
+                                    date = datetime.strptime(date_str, '%d/%m/%Y').date()
+                                #es necesario modificar los datos de la hora para que se guarde como tal, el archivo nos lo proporciona como un texto
+                                #y es importante guardarlo como el tipo de dato correcto.
+                                # sucede algo más, y es que para el campo de hora, los archivos prn, manejan el 24:00, se debe convertir a 00:00:00
+                                # se retiran las comillas
+                                time_str = values[2].strip('"')
+                                # se valida que el dato inicie con 24
+                                if time_str.startswith('24:'):
 
-                            # se crea un objeto data para insertar los valores obtenidos
-                            # en caso de que no exista data para los campos numéricos
-                            # se registra un valor None = Null
-                            data = DatosMedidorConsumo(
-                                meter_id=values[0].strip('" '),
-                                date=date,
-                                time=time_obj,
-                                kwh_del=float(values[4]) if values[4] else None,
-                                kwh_rec=float(values[5]) if values[5] else None,
-                                kvarh_q1=float(values[6]) if values[6] else None,
-                                kvarh_q2=float(values[7]) if values[7] else None,   
-                                kvarh_q3=float(values[8]) if values[8] else None,
-                                kvarh_q4=float(values[9]) if values[9] else None,
-                            )
+                                    # aumenta en 1 el día cuando se llega a las 24 horas
+                                    date += timedelta(days=1)
+
+                                    # reemplaza el 24 por 00 desde antes del indice 2 de la cadena
+                                    time_str = '00' + time_str[2:]
+                                # se guarda la cadena en un formato de tipo time    
+                                time_obj = datetime.strptime(time_str, '%H:%M').time()
+
+                                # se crea un objeto data para insertar los valores obtenidos
+                                # en caso de que no exista data para los campos numéricos
+                                # se registra un valor None = Null
+                                data = DatosMedidorConsumo(
+                                    meter_id=values[0].strip('" '),
+                                    date=date,
+                                    time=time_obj,
+                                    kwh_del=float(values[4]) if values[4] else None,
+                                    kwh_rec=float(values[5]) if values[5] else None,
+                                    kvarh_q1=float(values[6]) if values[6] else None,
+                                    kvarh_q2=float(values[7]) if values[7] else None,   
+                                    kvarh_q3=float(values[8]) if values[8] else None,
+                                    kvarh_q4=float(values[9]) if values[9] else None,
+                                )
                         # estas líneas verifican si ya existe un registro con la misma clave primaria antes de poder insertar
                         # se busca por medio de una consulta usando parámetros del nuevo dato, si es que estos ya existen
                         # entonces devolverá información y se guardará en la variable 'existing_record', en caso de que no
                         # exista entonces no contendrá información
-                        existing_record = db.query(DatosMedidorConsumo).filter_by(
-                            meter_id=data.meter_id,
-                            date=data.date,
-                            time=data.time
-                        ).first()
+                        if data:
+                            if perfil=="carga":
+                                verificar_repetidos = db.query(DatosMedidorConsumo)
+                            else:
+                                verificar_repetidos = db.query(DatosMedidorInstrumentacion)
 
-                        # se valida la data de 'existing_record'
-                        if existing_record:
-                            # en caso de que ya exista un registro con la misma clave primaria, no se inserta
-                            print(f"Registro duplicado encontrado y omitido: {data}")
-                        else:
-                            # si no existe, entonces se podrá insertar el nuevo registro
-                            # se agregan los datos de la sesion para acceder a la base de datos
-                            db.add(data)
+                            existing_record = verificar_repetidos.filter_by(
+                                meter_id=data.meter_id,
+                                date=data.date,
+                                time=data.time
+                            ).first()
 
+                            # se valida la data de 'existing_record'
+                            if existing_record:
+                                # en caso de que ya exista un registro con la misma clave primaria, no se inserta
+                                print(f"Registro duplicado encontrado y omitido: {data}")
+                            else:
+                                # si no existe, entonces se podrá insertar el nuevo registro
+                                # se agregan los datos de la sesion para acceder a la base de datos
+                                db.add(data)
                     # el commit añade todo lo que se ha obtenido, si hay un error en algún objeto, entonces no se guarda nada
-                    db.commit()
+                    if data:
+                        db.commit()
             else:
                 # esto aplica solo a los archivos que no puedieron ser evaluados por no cumplir con el formato o con el nombre
                 # se añaden los archivos no validos por error de valor a la lista

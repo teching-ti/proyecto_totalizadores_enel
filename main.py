@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox, filedialog
+from tkinter.messagebox import askyesno
 from tkinter.ttk import Label, Treeview
 from tkinter import ttk
 from tkcalendar import Calendar
@@ -10,6 +11,7 @@ import matplotlib.pyplot as plt
 from logica_guardar_datos import evaluar_guardar_archivos
 import datetime
 from datetime import datetime
+import os
 
 import openpyxl
 # Base de datos
@@ -52,12 +54,50 @@ def eliminar_registros_medidor(medidor):
     finally:
         db.close()
 
-# función para importa datos
+''' LAS DOS FUNCIONES SIGUIENTES SERÁN UTILIZADAS PARA IMPORTAR DATOS '''
+# esta funcion sirve para los perfiles de carga
 def importar_lecturas():
+    # declara variable vacía
+
     # tipos de archivos permitidos
     tipos_archivos = [("Archivos CSV y PRN", "*.csv;*.prn")]
     # ventana de selección
-    archivos_seleccionados = filedialog.askopenfilenames(title="Seleccione archivos CSV o PRN", filetypes=tipos_archivos)
+    archivos_seleccionados = filedialog.askopenfilenames(title="Seleccione archivos CSV o PRN - Perfiles de Carga", filetypes=tipos_archivos)
+
+    # Obtener los nombres de los archivos seleccionados
+    nombres_archivos = [os.path.basename(archivo) for archivo in archivos_seleccionados]
+    mensaje_confirmacion = "¿Desea importar los siguientes archivos?\n\n"
+    mensaje_confirmacion+="\n".join(nombres_archivos)
+
+    '''AGREGAR AQUÍ MENSAJE DE CONFIRMACIÓN (NOMBRES/CANTIDAD DE ARCHIVOS A IMPORTAR)'''
+    if archivos_seleccionados:
+        aviso_confirmacion = askyesno(title='Confirmación', message=mensaje_confirmacion)
+        # se ejecuta la función 'evaluar_guardar_archivos' dentro de una variable, la función creada en el archivo 'logica_guardar_datos.py' devuelve un una lista de nombres
+        # esta lista de nombres estará guardada en la variable 'archivos_no_validos'
+
+        if aviso_confirmacion==True:
+            archivos_no_validos = evaluar_guardar_archivos(archivos_seleccionados)
+             # si existen datos en esta variable, se mostrará el nombre de estos archivos en un mensaje
+            if archivos_no_validos:
+                mensaje = "Los siguientes archivos no son válidos:\n" + "\n".join(archivos_no_validos)
+                messagebox.showwarning("Archivos no válidos", mensaje)
+            else:
+            # si la lista esta vacía por no existir archivos inválidos se mostrará un mensaje de confirmación
+                messagebox.showinfo("Éxito", "Todos los archivos fueron importados correctamente.")
+                # se ejecuta la siguiente función que refresca la información mostrada en la interfaz
+                actualizar_lista_medidores()
+        else:
+            messagebox.showinfo("Aviso", "Operación Detenida")
+    else:
+        messagebox.showinfo("Mensaje", "No se seleccionaron archivos para importar.")
+
+# esta función sirve para los perfiles de instrumentación 
+'''modificar en base a lo requerido'''
+def importar_lecturas_2():
+    # tipos de archivos permitidos
+    tipos_archivos = [("Archivos CSV y PRN", "*.csv;*.prn")]
+    # ventana de selección
+    archivos_seleccionados = filedialog.askopenfilenames(title="Seleccione archivos CSV o PRN - Perfiles de Instrumentación", filetypes=tipos_archivos)
     if archivos_seleccionados:
         # se ejecuta la función 'evaluar_guardar_archivos' dentro de una variable, la función creada en el archivo 'logica_guardar_datos.py' devuelve un una lista de nombres
         # esta lista de nombres estará guardada en la variable 'archivos_no_validos'
@@ -75,6 +115,9 @@ def importar_lecturas():
     else:
         messagebox.showinfo("Mensaje", "No se seleccionaron archivos para importar.")
 
+
+    
+'''Comienza la sección para generar reportes'''
 # primera funcion para generar reportes
 def generar_reportes_one():
     
@@ -318,15 +361,29 @@ menu_titulo = tk.Label(menu_frame, image=logo ,compound=tk.LEFT, font=("Arial", 
 menu_titulo.pack(pady=35)
 
 # se agrega un combobox para poder seleccionar con que tipo de perfil desea interactuar el usuario
-combo = ttk.Combobox(
-    menu_frame,
-    state="readonly",
-    values=["Perfiles de Carga", "Perfiles de Instrumentación"],
-    width=26
-)
+'''INICIA FUNCIONALIDADES DEL COMBOBOX EN EL MENU'''
+# SE AGREGÓ UN COMBO BOX AL MENU PARA SELECCIONAR EL TIPO DE PERFIL A IMPORTAR
+# SE PUEDE AGREGAR UN BOTON PARA INSERTAR ALLÍ LOS FACTORES O UNA LÓGICA PARA ABRIR EL ARCHIVO Y EXTRAERLOS DIRECTAMENTe
+# GUARDARLOS EN UNA TABLA Y POSTEIORMENTE USARLOS PARA REALIZAR LOS CÁLCULOS CORRESPONDIENTES
+# def seleccionar_perfil(event):
+#     perfil_seleccionado = combo.get()
 
-combo.set("Perfiles de Carga")
-combo.pack(pady=25, padx=20)
+#     if perfil_seleccionado == "Perfiles de Carga":
+#         boton_importar.config(command=importar_lecturas)
+#     elif perfil_seleccionado == "Perfiles de Instrumentación":
+#         boton_importar.config(command=boton2)
+
+# combo = ttk.Combobox(
+#     menu_frame,
+#     state="readonly",
+#     values=["Perfiles de Carga", "Perfiles de Instrumentación"],
+#     width=26
+# )
+
+# combo.set("Perfiles de Carga")
+# combo.pack(pady=25, padx=20)
+# combo.bind("<<ComboboxSelected>>", seleccionar_perfil)
+'''FINALIZAN FUNCIONALIDADES DEL COMBOBOX EN EL MENU'''
 
 # se cargan los íconos para los botones
 icono1 = tk.PhotoImage(file="images/img1.png")
@@ -340,6 +397,9 @@ imagen3 = icono3
 
 icono4 = tk.PhotoImage(file="images/img4.png")
 imagen4 = icono4
+
+def boton2():
+    messagebox.showinfo("En efecto, se ha cambiado el comando")
 
 # se crean los botones y se coloca su respectivo texto e íconos
 boton_importar = tk.Button(menu_frame, text="   Importar   ", image=imagen1, compound=tk.LEFT, command=importar_lecturas, width=140, cursor="hand2")
@@ -368,7 +428,7 @@ notebook.add(reportes_frame, text="Reportes")
 
 ''' /*/*/*/*/* INICIA CONTENIDO DE DATOS HISTORICOS '''
 # se asigna un titulo al frame de datos historicos
-datos_historicos_title = tk.Label(datos_historicos_frame, text="Datos Históricos - Perfiles de Carga", bg="#2f3640", fg="white", font=("Arial", 12))
+datos_historicos_title = tk.Label(datos_historicos_frame, text="Datos Históricos", bg="#2f3640", fg="white", font=("Arial", 12))
 datos_historicos_title.pack(side="top", fill="x")
 datos_historicos_title.configure(anchor="w") 
 

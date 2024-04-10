@@ -9,19 +9,50 @@ pip freeze > requirements.txt
 Información recolectada en base a los archivos:
 
 /****----
-- script para crear la base de datos: 
+- script para crear la base de datos
+CREATE DATABASE 'nombre'
+
+- script para crear la tabla de perfiles de carga: 
 CREATE TABLE datos_medidor_consumo(
     id INT PRIMARY KEY AUTO_INCREMENT,
     meter_id VARCHAR(255),
     date DATE,
     time TIME,
-    kwh_del DECIMAL(14, 8),
-    kwh_rec DECIMAL(14, 8),
-    kvarh_q1 DECIMAL(14, 8),
-    kvarh_q2 DECIMAL(14, 8),
-    kvarh_q3 DECIMAL(14, 8),
-    kvarh_q4 DECIMAL(14, 8)
+    kwh_del DECIMAL(14, 8) NULL,
+    kwh_rec DECIMAL(14, 8) NULL,
+    kvarh_q1 DECIMAL(14, 8) NULL,
+    kvarh_q2 DECIMAL(14, 8) NULL,
+    kvarh_q3 DECIMAL(14, 8) NULL,
+    kvarh_q4 DECIMAL(14, 8) NULL
+);
+
+- script para crear la tabla de medidores
+CREATE TABLE medidores(
+    id VARCHAR(12) PRIMARY KEY,
+    factor DECIMAL(6,2) NULL
+);
+
+- script para crear la tabla de perfiles de instrumentación
+CREATE TABLE datos_medidor_instrumentacion( 
+    id INT PRIMARY KEY AUTO_INCREMENT, 
+    meter_id VARCHAR(255), 
+    date DATE, time TIME, 
+    int_len DECIMAL(14, 8) NULL, 
+    average_phase_a_voltage DECIMAL(14, 8) NULL, 
+    average_phase_b_voltage DECIMAL(14, 8) NULL, 
+    average_phase_c_voltage DECIMAL(14, 8) NULL, 
+    average_phase_a_current DECIMAL(14, 8) NULL, 
+    average_phase_b_current DECIMAL(14, 8) NULL, 
+    average_phase_c_current DECIMAL(14, 8) NULL, 
+    end_phase_a_pf DECIMAL(14, 8) NULL, 
+    end_phase_b_pf DECIMAL(14, 8) NULL, 
+    end_phase_c_pf DECIMAL(14, 8) NULL, 
+    average_line_frequency DECIMAL(14, 8) NULL, 
+    average_phase_a_kw DECIMAL(14, 8) NULL, 
+    average_phase_b_kw DECIMAL(14, 8) NULL, 
+    average_phase_c_kw DECIMAL(14, 8) NULL 
 );
 
 - script para eliminar los registros de la base de datos:
 TRUNCATE TABLE datos_medidor_consumo
+TRUNCATE TABLE datos_medidor_instrumentacion

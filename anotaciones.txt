@@ -1,6 +1,7 @@
 /****-----
 9_04 Reunión, presentación de avance (aplicativo medidores totalizadores enel)
 apuntes:
+*** ES NECESARIO USAR EL FACTOR POR EL QUE SE MULTIPLICARÁ CADA PROMEDIO DE SUMINISTRO PARA OBTENER UNA GRÁFICA, se encuentra en el archivo 'Instalación totalizadores'
 
 * Modificación de interfaz para seleccionar entre tipo de perfil a importar (perfil de carga - perfil de instrumentación)
 (En el apartado visual donde se meustran los datos históricos, se deben mostrar los registros de perfil de carga y de perfil de instrumentación)
