@@ -29,6 +29,9 @@ CREATE TABLE datos_medidor_consumo(
 - script para crear la tabla de medidores
 CREATE TABLE medidores(
     id VARCHAR(12) PRIMARY KEY,
+    sed VARCHAR(12) NULL,
+    fecha_instalacion date NULL,
+    marca varchar(12) NULL,
     factor DECIMAL(6,2) NULL
 );
 

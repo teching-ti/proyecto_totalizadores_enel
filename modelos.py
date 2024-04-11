@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, Time, Float, DECIMAL
-from db import Base, Base2
+from db import Base
 
 class DatosMedidorConsumo(Base):
     __tablename__ = "datos_medidor_consumo"
@@ -15,7 +15,7 @@ class DatosMedidorConsumo(Base):
     kvarh_q3 = Column(DECIMAL(precision=14, scale=8), nullable=True)
     kvarh_q4 = Column(DECIMAL(precision=14, scale=8), nullable=True)
 
-class DatosMedidorInstrumentacion(Base2):
+class DatosMedidorInstrumentacion(Base):
     # agregar aqui la nueva tabla para el registro de los perfiles de instrumentación
     __tablename__ = "datos_medidor_instrumentacion"
     
@@ -39,3 +39,13 @@ class DatosMedidorInstrumentacion(Base2):
     average_phase_a_kw = Column(DECIMAL(precision=14, scale=8), nullable=True)
     average_phase_b_kw = Column(DECIMAL(precision=14, scale=8), nullable=True)
     average_phase_c_kw = Column(DECIMAL(precision=14, scale=8), nullable=True)
+
+class Medidores(Base):
+    # agregar aqui la nueva tabla para el registro de los medidores
+    __tablename__ = "medidores"
+    
+    id = Column(String, primary_key=True)
+    sed = Column(String, nullable=True)
+    fecha_instalacion = Column(Date, nullable=True)
+    marca = Column(String, nullable=True)
+    factor = Column(DECIMAL(precision=6, scale=2), nullable=True)

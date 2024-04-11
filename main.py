@@ -8,7 +8,7 @@ from tkcalendar import Calendar
 from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-from logica_guardar_datos import evaluar_guardar_archivos
+from logica_guardar_datos import evaluar_guardar_archivos, evaluar_guardar_medidores_factor
 import datetime
 from datetime import datetime
 import os
@@ -16,7 +16,8 @@ import os
 import openpyxl
 # Base de datos
 from db import SessionLocal
-from modelos import DatosMedidorConsumo
+from modelos import DatosMedidorConsumo, Medidores, DatosMedidorInstrumentacion
+from sqlalchemy import func
 
 # Reportes
 # primer grafico y data
@@ -27,14 +28,35 @@ def obtener_medidores_info():
     # se accede a la sesión de la base de datos
     db = SessionLocal()
     try:
+        # Obtener los IDs únicos de los medidores que tienen registros en DatosMedidorConsumo
+        medidores_con_consumo = db.query(DatosMedidorConsumo.meter_id).distinct().all()
+
         # lista que cargará la data de los medidores según la base de dato
         medidores_info = []
-        for medidor in db.query(DatosMedidorConsumo.meter_id).distinct().all():
-            primer_registro = db.query(DatosMedidorConsumo.date).filter_by(meter_id=medidor[0]).order_by(DatosMedidorConsumo.date).first()
-            ultimo_registro = db.query(DatosMedidorConsumo.date).filter_by(meter_id=medidor[0]).order_by(DatosMedidorConsumo.date.desc()).first()
-            huecos = db.query(DatosMedidorConsumo).filter(DatosMedidorConsumo.meter_id == medidor[0], DatosMedidorConsumo.kwh_del.is_(None)).count()
-            medidores_info.append((medidor[0], primer_registro[0], ultimo_registro[0], huecos))
+
+        # for medidor in db.query(DatosMedidorConsumo.meter_id).distinct().all():
+        #     primer_registro = db.query(DatosMedidorConsumo.date).filter_by(meter_id=medidor[0]).order_by(DatosMedidorConsumo.date).first()
+        #     ultimo_registro = db.query(DatosMedidorConsumo.date).filter_by(meter_id=medidor[0]).order_by(DatosMedidorConsumo.date.desc()).first()
+        #     huecos = db.query(DatosMedidorConsumo).filter(DatosMedidorConsumo.meter_id == medidor[0], DatosMedidorConsumo.kwh_del.is_(None)).count()
+        #     medidores_info.append((medidor[0], primer_registro[0], ultimo_registro[0], huecos))
+        # return medidores_info
+
+        # Iterar sobre los IDs de los medidores con consumo
+        for medidor_id, in medidores_con_consumo:
+            # Verificar si el medidor también existe en la tabla Medidores
+            medidor_info = db.query(Medidores).filter_by(id=medidor_id).first()
+
+            if medidor_info:
+                # Obtener el primer y último registro de consumo para cada medidor
+                primer_registro_consumo = db.query(func.min(DatosMedidorConsumo.date)).filter_by(meter_id=medidor_id).scalar()
+                ultimo_registro_consumo = db.query(func.max(DatosMedidorConsumo.date)).filter_by(meter_id=medidor_id).scalar()
+                # Calcular el número de huecos para cada medidor
+                huecos = db.query(DatosMedidorConsumo).filter(DatosMedidorConsumo.meter_id == medidor_id, DatosMedidorConsumo.kwh_del.is_(None)).count()
+                # Agregar los datos del medidor y su consumo a la lista
+                medidores_info.append((medidor_id, medidor_info.sed ,primer_registro_consumo, ultimo_registro_consumo, huecos, medidor_info.marca, medidor_info.factor))
+
         return medidores_info
+    
     finally:
         db.close()
 
@@ -45,6 +67,7 @@ def eliminar_registros_medidor(medidor):
     try:
         # consulta para eliminar el medidor o los medidores seleccionados
         db.query(DatosMedidorConsumo).filter_by(meter_id=medidor).delete()
+        db.query(DatosMedidorInstrumentacion).filter_by(meter_id=medidor).delete()
         db.commit()
         messagebox.showinfo("Eliminación exitosa", f"Los datos del medidor {medidor} han sido eliminados.")
     except Exception as e:
@@ -72,12 +95,12 @@ def importar_lecturas():
     '''AGREGAR AQUÍ MENSAJE DE CONFIRMACIÓN (NOMBRES/CANTIDAD DE ARCHIVOS A IMPORTAR)'''
     if archivos_seleccionados:
         aviso_confirmacion = askyesno(title='Confirmación', message=mensaje_confirmacion)
-        # se ejecuta la función 'evaluar_guardar_archivos' dentro de una variable, la función creada en el archivo 'logica_guardar_datos.py' devuelve un una lista de nombres
-        # esta lista de nombres estará guardada en la variable 'archivos_no_validos'
 
         if aviso_confirmacion==True:
+            # se ejecuta la función 'evaluar_guardar_archivos' dentro de una variable, la función creada en el archivo 'logica_guardar_datos.py' devuelve un una lista de nombres
+            # esta lista de nombres estará guardada en la variable 'archivos_no_validos'
             archivos_no_validos = evaluar_guardar_archivos(archivos_seleccionados)
-             # si existen datos en esta variable, se mostrará el nombre de estos archivos en un mensaje
+            # si existen datos en esta variable, se mostrará el nombre de estos archivos en un mensaje
             if archivos_no_validos:
                 mensaje = "Los siguientes archivos no son válidos:\n" + "\n".join(archivos_no_validos)
                 messagebox.showwarning("Archivos no válidos", mensaje)
@@ -91,29 +114,39 @@ def importar_lecturas():
     else:
         messagebox.showinfo("Mensaje", "No se seleccionaron archivos para importar.")
 
-# esta función sirve para los perfiles de instrumentación 
+# esta función sirve para importar información sobre los medidores y el factor
 '''modificar en base a lo requerido'''
-def importar_lecturas_2():
+def importar_medidores():
     # tipos de archivos permitidos
-    tipos_archivos = [("Archivos CSV y PRN", "*.csv;*.prn")]
+    tipos_archivos = [("Excel", "*xlsx")]
     # ventana de selección
-    archivos_seleccionados = filedialog.askopenfilenames(title="Seleccione archivos CSV o PRN - Perfiles de Instrumentación", filetypes=tipos_archivos)
-    if archivos_seleccionados:
-        # se ejecuta la función 'evaluar_guardar_archivos' dentro de una variable, la función creada en el archivo 'logica_guardar_datos.py' devuelve un una lista de nombres
-        # esta lista de nombres estará guardada en la variable 'archivos_no_validos'
-        archivos_no_validos = evaluar_guardar_archivos(archivos_seleccionados)
-        
-        # si existen datos en esta variable, se mostrará el nombre de estos archivos en un mensaje
-        if archivos_no_validos:
-            mensaje = "Los siguientes archivos no son válidos:\n" + "\n".join(archivos_no_validos)
-            messagebox.showwarning("Archivos no válidos", mensaje)
-        else:
-        # si la lista esta vacía por no existir archivos inválidos se mostrará un mensaje de confirmación
-            messagebox.showinfo("Éxito", "Todos los archivos fueron importados correctamente.")
-            # se ejecuta la siguiente función que refresca la información mostrada en la interfaz
-            actualizar_lista_medidores()
+    archivos_seleccionados = filedialog.askopenfilenames(title="Seleccione el archivo correcto", filetypes=tipos_archivos)
+
+    # Obtener el nombre del archivo seleccionado.
+    nombre_archivo = [os.path.basename(archivo) for archivo in archivos_seleccionados]
+    mensaje_confirmacion = "¿Desea importar el siguiente archivo?\n\n"
+    mensaje_confirmacion+="\n".join(nombre_archivo)
+
+    if len(archivos_seleccionados)==1:
+        aviso_confirmacion = askyesno(title='Confirmación', message=mensaje_confirmacion)
+
+        if aviso_confirmacion==True:
+            # se ejecuta la función 'medidores_factor' dentro de una variable, la función creada en el archivo 'logica_guardar_datos.py' devuelve un una lista de nombres
+            # esta lista de nombres estará guardada en la variable 'archivos_no_validos'
+            archivo_no_valido = evaluar_guardar_medidores_factor(archivos_seleccionados)
+
+            if archivo_no_valido!=0:
+                mensaje = "Archivo inválido."
+                messagebox.showwarning("Error al seleccionar el archivo", mensaje)
+            else:
+            # si la lista esta vacía por no existir archivos inválidos se mostrará un mensaje de confirmación
+                messagebox.showinfo("Éxito", "Guardado correcto.")
+                # se ejecuta la siguiente función que refresca la información mostrada en la interfaz
+                actualizar_lista_medidores()
+    elif len(archivos_seleccionados)<1:
+        messagebox.showinfo("Mensaje", "Operación cancelada")
     else:
-        messagebox.showinfo("Mensaje", "No se seleccionaron archivos para importar.")
+        messagebox.showerror("Mensaje", "Debe seleccionar el archivo excel específico")
 
 
     
@@ -228,31 +261,18 @@ def generar_reportes(fecha_inicio, fecha_fin):
             hora = datos[8]
             tipo = datos[9]
             treeview_reportes.insert("", "end", text=medidor, values=(dia, mes, cant_v, desde, hasta, acum, ener_mes, hora, tipo))
-                
+
         datos_medidores_fechas = (datos_obtenidos[-1][-1])
             # se guarda en la variable global la lista de datos obtenidos
         datos_obtenidos_globales = datos_obtenidos
     except:
         messagebox.showwarning("Aviso", "No se pudo completar la operación, inténtelo nuevamente y revise los rangos de fecha seleccionados")
 
-
-    '''se desactiva de momento la presentación del gráfico'''
-        # for widget in reportes_frame.winfo_children():
-        #     widget.destroy()
-        
-        # Insertar los datos en el treeview
-        # for hora, consumo in datos_consumo:
-        #     treeview_reportes.insert("", "end", text=hora, values=(consumo,))
-
-    # fig es lo que te retorna la funcion de generar_grafico_consumo_por_horas, se usaría para mostrar el gráfico en algún frame
-    # fig = generar_grafico_consumo_por_horas(datos_consumo)
-
-    # if fig!= None:
-    #     canvas = FigureCanvasTkAgg(fig, master=reportes_frame)
-    #     canvas.draw()
-    #     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH)
-    # else:
-    #     messagebox.showinfo("Mensaje", "Las fechas seleccionadas no existen en los registros")
+    '''el usuario prefiere que todos los gráficos sean guardados en una misma carpeta, uno detrás del otro
+    para ello ya se cuenta con la tabla de medidores donde se encuentra el factor:
+    lo primero sería calcular el promedio de las corrientes, se obtiene una gráfica de ese promedio
+    tercero sería usar cada dato de ese promedio multiplicado por el factor, luego de ello se obtiene la segunda gráfica
+    '''
 
 # función para verificar si debe generarse el excel
 def verificar_y_generar_excel():
@@ -262,43 +282,73 @@ def verificar_y_generar_excel():
     else:
         messagebox.showwarning("Sin datos", "No hay datos para generar el archivo Excel.")
 
-# función para crear el excel con la data
-def generar_excel():
-    # uso de la variable global declarada anteriormente
-    global datos_obtenidos_globales
-    #print(datos_obtenidos_globales)
-    # se crear un nuevo libro de Excel vacío
+# función para crear el excel con la data obtenida desde la respuesta de la función
+# def generar_excel():
+#     # uso de la variable global declarada anteriormente
+#     global datos_obtenidos_globales
+#     #print(datos_obtenidos_globales)
+#     # se crear un nuevo libro de Excel vacío
 
+#     workbook = openpyxl.Workbook()
+#     # obtiene la hoja activa del libro 'por defecto es la primera'
+#     sheet = workbook.active
+#     # le da título a la hoja activa
+#     sheet.title = "Reporte"
+
+#     # escribe los siguientes encabezados en la primera fila
+#     headers = ["Medidor", "Dias", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"]
+
+#     # recorre la lista de headers
+#     for col, header in enumerate(headers, start=1):
+#         # con la finalidad de escribir los encabezados, empieza en la primera fila
+#         sheet.cell(row=1, column=col, value=header)
+
+#     # recorre los datos de la lista datos_obtenidos_globales, que contiene los datos recibidos
+#     for row, datos in enumerate(datos_obtenidos_globales, start=2):
+#         # Si hay datos y la longitud de la lista es mayor que 1
+#         if datos and len(datos) > 1:
+#             # se recorre cada elemento independiente de la lista datos
+#             for col, dato in enumerate(datos[:-1], start=1):  # Excluye el último elemento
+#                 sheet.cell(row=row, column=col, value=dato)
+
+#     # se guardar el archivo Excel
+#     # se pregunta por el nombre del archivo y su ubicación
+#     filename = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Archivos de Excel", "*.xlsx")])
+#     if filename:
+#         # si existe un nombre asignado al archivo se guarda
+#         workbook.save(filename)
+#         # se muestra mensaje de confirmación
+#         messagebox.showinfo("Éxito", f"Archivo Excel guardado en {filename}")
+
+# función para crear el excel con la data obtenida desde lo mostrado en el treeview de tkinter
+def generar_excel():
+    # Crear un nuevo libro de Excel vacío
     workbook = openpyxl.Workbook()
-    # obtiene la hoja activa del libro 'por defecto es la primera'
+    # Obtener la hoja activa del libro (por defecto es la primera)
     sheet = workbook.active
-    # le da título a la hoja activa
+    # Dar título a la hoja activa
     sheet.title = "Reporte"
 
-    # escribe los siguientes encabezados en la primera fila
+    # Obtener los encabezados del Treeview
     headers = ["Medidor", "Dias", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"]
 
-    # recorre la lista de headers
+    # Escribir los encabezados en la primera fila del archivo Excel
     for col, header in enumerate(headers, start=1):
-        # con la finalidad de escribir los encabezados, empieza en la primera fila
         sheet.cell(row=1, column=col, value=header)
 
-    # recorre los datos de la lista datos_obtenidos_globales, que contiene los datos recibidos
-    for row, datos in enumerate(datos_obtenidos_globales, start=2):
-        # Si hay datos y la longitud de la lista es mayor que 1
-        if datos and len(datos) > 1:
-            # se recorre cada elemento independiente de la lista datos
-            for col, dato in enumerate(datos[:-1], start=1):  # Excluye el último elemento
-                sheet.cell(row=row, column=col, value=dato)
+    # Recorrer las filas del Treeview
+    for row_id in treeview_reportes.get_children():
+        # Obtener los valores de cada columna en la fila actual
+        valores_fila = [treeview_reportes.item(row_id, "text")] + [treeview_reportes.set(row_id, col) for col in treeview_reportes["columns"]]
+        # Escribir los valores de la fila en el archivo Excel
+        sheet.append(valores_fila)
 
-    # se guardar el archivo Excel
-    # se pregunta por el nombre del archivo y su ubicación
+    # Guardar el archivo Excel
     filename = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Archivos de Excel", "*.xlsx")])
     if filename:
-        # si existe un nombre asignado al archivo se guarda
         workbook.save(filename)
-        # se muestra mensaje de confirmación
         messagebox.showinfo("Éxito", f"Archivo Excel guardado en {filename}")
+
 
 # método para eliminar datos de los registros
 # se puede eliminar uno o más medidores
@@ -334,11 +384,14 @@ def actualizar_lista_medidores():
     # recorre la información obtenida
     for medidor_info in medidores_info:
         medidor = medidor_info[0]
-        primer_registro = medidor_info[1]
-        ultimo_registro = medidor_info[2]
-        huecos = medidor_info[3]
+        medidor_sed = medidor_info[1]
+        primer_registro = medidor_info[2]
+        ultimo_registro = medidor_info[3]
+        huecos = medidor_info[4]
+        marca = medidor_info[5]
+        factor = medidor_info[6]
         # inserta la información en el treeview
-        treeview_medidores.insert("", "end", text=medidor, values=(primer_registro, ultimo_registro, huecos))
+        treeview_medidores.insert("", "end", text=medidor, values=(medidor_sed, primer_registro, ultimo_registro, huecos, marca, factor))
 
 '''ventana del aplicativo'''
 root = tk.Tk()
@@ -398,17 +451,22 @@ imagen3 = icono3
 icono4 = tk.PhotoImage(file="images/img4.png")
 imagen4 = icono4
 
+icono5 = tk.PhotoImage(file="images/img5.png")
+imagen5 = icono5
+
 def boton2():
     messagebox.showinfo("En efecto, se ha cambiado el comando")
 
 # se crean los botones y se coloca su respectivo texto e íconos
-boton_importar = tk.Button(menu_frame, text="   Importar   ", image=imagen1, compound=tk.LEFT, command=importar_lecturas, width=140, cursor="hand2")
+boton_importar = tk.Button(menu_frame, text="   Importar Perfiles  ", image=imagen1, compound=tk.LEFT, command=importar_lecturas, width=155, cursor="hand2")
 boton_importar.pack(pady=25, padx=20)
-boton_reportes = tk.Button(menu_frame, text="   Gen. Reportes   ", image=imagen2, compound=tk.LEFT, command=generar_reportes_one, width=140, cursor="hand2")
+boton_medidores = tk.Button(menu_frame, text="   Importar Medidores  ", image=imagen5, compound=tk.LEFT, command=importar_medidores, width=155, cursor="hand2")
+boton_medidores.pack(pady=25, padx=20)
+boton_reportes = tk.Button(menu_frame, text="   Gen. Reportes   ", image=imagen2, compound=tk.LEFT, command=generar_reportes_one, width=155, cursor="hand2")
 boton_reportes.pack(pady=25, padx=20)
-boton_eliminar = tk.Button(menu_frame, text="   Eliminar   ", image=imagen3, compound=tk.LEFT, command=eliminar_datos, width=140, cursor="hand2")
+boton_eliminar = tk.Button(menu_frame, text="   Eliminar   ", image=imagen3, compound=tk.LEFT, command=eliminar_datos, width=155, cursor="hand2")
 boton_eliminar.pack(pady=25, padx=20)
-boton_salir = tk.Button(menu_frame, text="   Salir   ", image=imagen4, compound=tk.LEFT ,command=salir, width=140, cursor="hand2")
+boton_salir = tk.Button(menu_frame, text="   Salir   ", image=imagen4, compound=tk.LEFT ,command=salir, width=155, cursor="hand2")
 boton_salir.pack(pady=25, padx=20)
 
 '''Finaliza Menu'''
@@ -433,11 +491,27 @@ datos_historicos_title.pack(side="top", fill="x")
 datos_historicos_title.configure(anchor="w") 
 
 #se crea el treeview que mostrará información sobre los medidores
-treeview_medidores = Treeview(datos_historicos_frame, columns=("Primer Registro", "Último Registro", "Huecos/Vacios"))
+treeview_medidores = ttk.Treeview(datos_historicos_frame, columns=("SED", "Primer Registro", "Último Registro", "Huecos/Vacios", "Marca", "Factor"))
+
+# Configurar el ancho de las columnas para que se ajusten automáticamente al contenido
+treeview_medidores.column("#0", width=100)  # Ancho de la columna "Medidor"
+treeview_medidores.column("#1", width=100, stretch=True)  # Ancho de la columna "SED"
+treeview_medidores.column("#2", width=150, stretch=True)  # Ancho de la columna "Primer Registro"
+treeview_medidores.column("#3", width=150, stretch=True)  # Ancho de la columna "Último Registro"
+treeview_medidores.column("#4", width=100, stretch=True)  # Ancho de la columna "Huecos/Vacios"
+treeview_medidores.column("#5", width=100, stretch=True)  # Ancho de la columna "Marca"
+treeview_medidores.column("#6", width=100, stretch=True)  # Ancho de la columna "Factor"
+
+# Asignar los encabezados de las columnas
 treeview_medidores.heading("#0", text="Medidor")
-treeview_medidores.heading("#1", text="Primer Registro")
-treeview_medidores.heading("#2", text="Último Registro")
-treeview_medidores.heading("#3", text="Huecos/Vacios")
+treeview_medidores.heading("#1", text="SED")
+treeview_medidores.heading("#2", text="Primer Registro")
+treeview_medidores.heading("#3", text="Último Registro")
+treeview_medidores.heading("#4", text="Huecos/Vacios")
+treeview_medidores.heading("#5", text="Marca")
+treeview_medidores.heading("#6", text="Factor")
+
+# Hacer que el Treeview se ajuste al tamaño de la ventana y se muestren todas las columnas visibles
 treeview_medidores.pack(expand=True, fill="both")
 ''' /*/*/*/*/* TERMINA CONTENIDO DE DATOS HISTORICOS '''
 
@@ -475,28 +549,28 @@ def sort_column(treeview, col, reverse):
     treeview.heading(col, command=lambda: sort_column(treeview, col, not reverse))
 
 # inserción de información
-treeview_reportes = ttk.Treeview(reportes_frame, columns=("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9"))
-treeview_reportes.column("#0", width=50)
-treeview_reportes.column("col1", width=50)
-treeview_reportes.column("col2", width=50)
-treeview_reportes.column("col3", width=50)
-treeview_reportes.column("col4", width=50)
-treeview_reportes.column("col5", width=50)
-treeview_reportes.column("col6", width=50)
-treeview_reportes.column("col7", width=50)
-treeview_reportes.column("col8", width=50)
-treeview_reportes.column("col9", width=50)
+treeview_reportes = ttk.Treeview(reportes_frame, columns=("Medidor", "Días", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"))
+treeview_reportes.column("#0", width=50, stretch=True)
+treeview_reportes.column("#1", width=50, stretch=True)
+treeview_reportes.column("#2", width=50, stretch=True)
+treeview_reportes.column("#3", width=50, stretch=True)
+treeview_reportes.column("#4", width=50, stretch=True)
+treeview_reportes.column("#5", width=50, stretch=True)
+treeview_reportes.column("#6", width=50, stretch=True)
+treeview_reportes.column("#7", width=50, stretch=True)
+treeview_reportes.column("#8", width=50, stretch=True)
+treeview_reportes.column("#9", width=50, stretch=True)
 
 treeview_reportes.heading("#0", text="Medidor")
-treeview_reportes.heading("col1", text="Dias")
-treeview_reportes.heading("col2", text="Mes")
-treeview_reportes.heading("col3", text="Cant. Vacíos", command=lambda: sort_column(treeview_reportes, "col3", False))
-treeview_reportes.heading("col4", text="Desde")
-treeview_reportes.heading("col5", text="Hasta")
-treeview_reportes.heading("col6", text="Acumulado", command=lambda: sort_column(treeview_reportes, "col6", False))
-treeview_reportes.heading("col7", text="Energía - Mes", command=lambda: sort_column(treeview_reportes, "col7", False))
-treeview_reportes.heading("col8", text="Hora max.Demanda", command=lambda: sort_column(treeview_reportes, "col8", False))
-treeview_reportes.heading("col9", text="Tipo de Consumo")
+treeview_reportes.heading("#1", text="Dias")
+treeview_reportes.heading("#2", text="Mes")
+treeview_reportes.heading("#3", text="Cant. Vacíos", command=lambda: sort_column(treeview_reportes, "col3", False))
+treeview_reportes.heading("#4", text="Desde")
+treeview_reportes.heading("#5", text="Hasta")
+treeview_reportes.heading("#6", text="Acumulado", command=lambda: sort_column(treeview_reportes, "col6", False))
+treeview_reportes.heading("#7", text="Energía - Mes", command=lambda: sort_column(treeview_reportes, "col7", False))
+treeview_reportes.heading("#8", text="Hora max.Demanda", command=lambda: sort_column(treeview_reportes, "col8", False))
+treeview_reportes.heading("#9", text="Tipo de Consumo")
 
 treeview_reportes.pack(expand=True, fill="both")
 

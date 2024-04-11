@@ -17,7 +17,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Crea una clase base para los modelos de datos
 Base = declarative_base()
-Base2 = declarative_base()
 
 # para los calculos
 Session = sessionmaker(bind=engine)

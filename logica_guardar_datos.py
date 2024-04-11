@@ -1,8 +1,10 @@
 import os
 from datetime import datetime, timedelta
-from modelos import DatosMedidorConsumo, DatosMedidorInstrumentacion
+from modelos import DatosMedidorConsumo, DatosMedidorInstrumentacion, Medidores
 from db import SessionLocal
 import re
+import pandas as pd
+from sqlalchemy.exc import IntegrityError
 
 # Evaluar los perfiles de carga para realizar el guardado en la db
 
@@ -12,6 +14,8 @@ UPDATE `medidores` SET `id`='[value-1]',`factor`='[value-2]' WHERE 1
 ->Script para actualizar el valor de cada medidor, 60, 100, 140, 200, 300, 400
 '''
 
+# esta función se utiliza para guardar en la base de datos información proveniente de los perfiles de carga e instrumentación (no almacena el id de los medidores)
+# usa la tabla datos_medidores_consumo(perfiles de carga) y datos_medidores_instrumentación(perfiles de instrumentación)
 def evaluar_guardar_archivos(lista_rutas):
     perfil = ""
     # creacion de la sesion para acceder a la base de datos
@@ -57,7 +61,9 @@ def evaluar_guardar_archivos(lista_rutas):
                             # osea del dato que se encuentra en la primera columna de cada fila
                             # luego ese dato que vendría a ser el identificador del meter se agrega como dato para guardar
                             '''modificacion para los perfiles de carga'''
-                            meter_id_modificado = re.search(r'(\d+)', values[0]).group(1)
+                            
+                            # se colocó el {0*} en la expresión regular para retirar el 0 que llegaba por delante en el csv de 08119
+                            meter_id_modificado = re.search(r'0*(\d+)', values[0]).group(1)
 
                             # se guarda en la variable date_str el valor de fecha que llega desde el archivo
                             date_str = values[1]
@@ -276,3 +282,72 @@ def evaluar_guardar_archivos(lista_rutas):
     #"se retorna una lista de archivos no validos, osea los que según el filtro principal, no cumplen con las condiciones para abrir el archivo"
     # si la lista esta vacia o contiene datos, ejecutará una acción en 'interfaz.py'
     return archivos_no_validos
+
+# esta función guarda información de los medidores en la tabla 'medidores'
+def evaluar_guardar_medidores_factor(lista_rutas):
+    # creacion de la sesion para acceder a la base de datos
+    db = SessionLocal()
+    archivo_invalido = 0
+
+    # se obtiene el nombre del archivo y su extensión
+    archivo_cargado = lista_rutas[0]
+    nombre_archivo = os.path.basename(archivo_cargado)
+    extension_archivo = os.path.splitext(nombre_archivo)[1]
+    
+    # archivo seleccionado
+    if len(lista_rutas)!=1 and extension_archivo!=".xlsx":
+        archivo_invalido+=1
+        pass
+    else:
+        # carga el archivo excel en un data frame de pandas
+        try:
+            df = pd.read_excel(lista_rutas[0], sheet_name='Ord. Fecha', header=None, skiprows=3, usecols=[2,3,5,6,7])
+            #print(df)
+            df.columns = ['SED', 'Fecha Instalación','N° medidor instalado', 'Marca', 'Factor']
+        except Exception as e:
+            print("Error al cargar el archivo Excel:", e)
+            archivo_invalido += 1
+            return archivo_invalido
+        #print(df)
+
+        # imprime los datos obtenidos del archivo Excel
+        #print("Datos encontrados:")
+        for index, row in df.iterrows():
+            #print(row)
+            # creando una instancia de medidores para cada fila
+            # esta instancia será guardada en la base de datos
+            # verificar si el medidor ya existe en la base de datos
+            medidor_existente = db.query(Medidores).filter_by(id=row['N° medidor instalado']).first()
+            # si el medidor ya existe en la base de datos
+            if medidor_existente:
+                # actualiza el medidor existente con los nuevos datos del archivo Excel en cada una de sus columnas
+                medidor_existente.sed = row['SED']
+                medidor_existente.fecha_instalacion = row['Fecha Instalación']
+                medidor_existente.marca = row['Marca']
+                medidor_existente.factor = row['Factor']
+            else:
+                # se crea una nueva instancia para un medidor
+                medidor = Medidores(
+                    # se añade el valor de cada columna en la presente fila
+                    id=row['N° medidor instalado'],
+                    sed=row['SED'],
+                    fecha_instalacion=row['Fecha Instalación'],
+                    marca=row['Marca'],
+                    factor=row['Factor']
+                )
+                try:
+                    # añade la instancia
+                    db.add(medidor)
+                except IntegrityError as e:
+                    # en caso de que exista un error de integridad
+                    print("Error al guardar el medidor:", e)
+                    # se deshace la información y los objetos a guardar con la sesión
+                    db.rollback()
+                    archivo_invalido += 1
+                else:
+                    print("Medidor guardado exitosamente.")
+
+        # guardar los cambios en la base de datos
+        db.commit()
+
+    return archivo_invalido
