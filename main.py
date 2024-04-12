@@ -9,6 +9,7 @@ from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from logica_guardar_datos import evaluar_guardar_archivos, evaluar_guardar_medidores_factor
+from graficos_consumos import grafico_perfiles_instrumentacion
 import datetime
 from datetime import datetime
 import os
@@ -195,6 +196,8 @@ def abrir_ventana_periodo():
 
 # función que toma las fechas para generar el reporte
 def generar_reportes_periodo():
+    global fecha_inicio
+    global fecha_fin
     # fechas
     fecha_inicio_str = seleccion_fecha_inicio.get_date()
     fecha_fin_str = seleccion_fecha_fin.get_date()
@@ -322,32 +325,40 @@ def verificar_y_generar_excel():
 
 # función para crear el excel con la data obtenida desde lo mostrado en el treeview de tkinter
 def generar_excel():
-    # Crear un nuevo libro de Excel vacío
-    workbook = openpyxl.Workbook()
-    # Obtener la hoja activa del libro (por defecto es la primera)
-    sheet = workbook.active
-    # Dar título a la hoja activa
-    sheet.title = "Reporte"
+    try:
+        # crea un nuevo excel vacío
+        workbook = openpyxl.Workbook()
+        # se obtiene la hoja activa del libro, normalmente es la primera hoja
+        sheet = workbook.active
+        # título de la hoja
+        sheet.title = "Reporte"
 
-    # Obtener los encabezados del Treeview
-    headers = ["Medidor", "Dias", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"]
+        # se obtienen los encabezados del treeview
+        headers = ["Medidor", "Dias", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"]
 
-    # Escribir los encabezados en la primera fila del archivo Excel
-    for col, header in enumerate(headers, start=1):
-        sheet.cell(row=1, column=col, value=header)
+        # coloca los encabezados en la priemra fila de la hoja activa
+        for col, header in enumerate(headers, start=1):
+            sheet.cell(row=1, column=col, value=header)
 
-    # Recorrer las filas del Treeview
-    for row_id in treeview_reportes.get_children():
-        # Obtener los valores de cada columna en la fila actual
-        valores_fila = [treeview_reportes.item(row_id, "text")] + [treeview_reportes.set(row_id, col) for col in treeview_reportes["columns"]]
-        # Escribir los valores de la fila en el archivo Excel
-        sheet.append(valores_fila)
+        # recorre cada fila del treeview
+        for row_id in treeview_reportes.get_children():
+            # obtiene los valores de cada columna en la fila actual
+            valores_fila = [treeview_reportes.item(row_id, "text")] + [treeview_reportes.set(row_id, col) for col in treeview_reportes["columns"]]
+            # agrega los valores de cada fila al archivo excel
+            sheet.append(valores_fila)
 
-    # Guardar el archivo Excel
-    filename = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Archivos de Excel", "*.xlsx")])
-    if filename:
-        workbook.save(filename)
-        messagebox.showinfo("Éxito", f"Archivo Excel guardado en {filename}")
+        # guarda el archivo excel (por el momento pregunta donde se guardará el documento y el nombre del archivo)
+        filename = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Archivos de Excel", "*.xlsx")])
+        if filename:
+            workbook.save(filename)
+            messagebox.showinfo("Éxito", f"Archivo Excel guardado en {filename}")
+    except:
+        print("Existe un error")
+    else:
+        # se obtiene el id de los medidores seleccionados para generar sus gráficos respectivos
+        ids_medidores = [treeview_reportes.item(row_id, "text") for row_id in treeview_reportes.get_children()]
+        # ejecutar función para generar gráfico
+        grafico_perfiles_instrumentacion(ids_medidores, fecha_inicio, fecha_fin)
 
 
 # método para eliminar datos de los registros
@@ -370,6 +381,11 @@ def eliminar_datos():
             eliminar_registros_medidor(medidor)
         # se ejecuta la función de actualizar para refrescar el frame
         actualizar_lista_medidores()
+
+def refresh_treeview():
+    # Elimina todas las filas del treeview excepto los encabezados
+    for row_id in treeview_reportes.get_children():
+        treeview_reportes.delete(row_id)
 
 # cerrar el aplicativo
 def salir():
@@ -519,12 +535,19 @@ treeview_medidores.pack(expand=True, fill="both")
 # se asigna un titulo al frame de reportes estadísticos
 reportes_estadisticos_title = tk.Label(reportes_frame, bg="#2f3640", fg="white", font=("Arial", 12))
 reportes_estadisticos_title.pack(side="top", fill="x")
-reportes_estadisticos_title.configure(anchor="w", text="Reportes - Perfiles de Carga")
+# reportes_estadisticos_title.configure(anchor="w", text="Reportes - Perfiles de Carga")
 
-# agrega un botón a la pestaña de reportes_frame
+# agregando botones a la pestaña de reportes
+tk.Label(reportes_estadisticos_title, bg="#2f3640", fg="white", font=("Arial", 12), text="Reportes - Perfiles de Carga").grid(row=0, column=0, sticky=W, padx=(10, 800))
+
+
+# este botón servirá para refrescar la ventana de reportes
+boton_refrescar_reportes = ttk.Button(reportes_estadisticos_title, text="Limpiar", cursor="hand2", command=refresh_treeview)
+boton_refrescar_reportes.grid(row=0, column=1, padx=5)
+
 # este botón servirá para generar los reportes en excel haciendo uso de los datos obtenidos
 boton_generar_documento = ttk.Button(reportes_estadisticos_title, text="G. Doc", cursor="hand2", command=verificar_y_generar_excel)
-boton_generar_documento.pack(side="right")
+boton_generar_documento.grid(row=0, column=2, padx=5)
 
 # función que servirá para ordenar la información del treeview en la pestaña de reportes
 def sort_column(treeview, col, reverse):
@@ -550,16 +573,16 @@ def sort_column(treeview, col, reverse):
 
 # inserción de información
 treeview_reportes = ttk.Treeview(reportes_frame, columns=("Medidor", "Días", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"))
-treeview_reportes.column("#0", width=50, stretch=True)
-treeview_reportes.column("#1", width=50, stretch=True)
-treeview_reportes.column("#2", width=50, stretch=True)
-treeview_reportes.column("#3", width=50, stretch=True)
-treeview_reportes.column("#4", width=50, stretch=True)
-treeview_reportes.column("#5", width=50, stretch=True)
-treeview_reportes.column("#6", width=50, stretch=True)
-treeview_reportes.column("#7", width=50, stretch=True)
-treeview_reportes.column("#8", width=50, stretch=True)
-treeview_reportes.column("#9", width=50, stretch=True)
+treeview_reportes.column("#0", width=120, stretch=NO)
+treeview_reportes.column("#1", width=60, stretch=NO)
+treeview_reportes.column("#2", width=120, stretch=NO)
+treeview_reportes.column("#3", width=120, stretch=NO)
+treeview_reportes.column("#4", width=120, stretch=NO)
+treeview_reportes.column("#5", width=120, stretch=NO)
+treeview_reportes.column("#6", width=120, stretch=NO)
+treeview_reportes.column("#7", width=120, stretch=NO)
+treeview_reportes.column("#8", width=120, stretch=NO)
+treeview_reportes.column("#9", width=180, stretch=NO)
 
 treeview_reportes.heading("#0", text="Medidor")
 treeview_reportes.heading("#1", text="Dias")

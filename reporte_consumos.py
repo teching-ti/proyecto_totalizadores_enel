@@ -52,10 +52,9 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     DE CUMPLIRSE SE PROCEDEDERÁ A ENVIAR DATA PARA MOSTRAR DESDE LA INTERFAZ MAIN.PY, SE DEBERÍA DE ALMACENAR EN UNA LISTA, INDICANDO LAS FECHAS Y MEDIDOR 
     CON EL MENSAJE DE AVISO, A FIN DE EVITAR MENSAJES DE ERROR
     '''
-
     #print(f"Ultimo dia de registro {ultimo_dia}")
     #print(f"Ultimo dia de seleccion por el usuario {fecha_fin}")
-    
+ 
     if ultimo_dia<fecha_fin:
         resultado_fechas.append(medidor_id)
 
