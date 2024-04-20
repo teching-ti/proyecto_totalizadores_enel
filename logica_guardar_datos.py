@@ -18,13 +18,18 @@ UPDATE `medidores` SET `id`='[value-1]',`factor`='[value-2]' WHERE 1
 # usa la tabla datos_medidores_consumo(perfiles de carga) y datos_medidores_instrumentación(perfiles de instrumentación)
 def evaluar_guardar_archivos(lista_rutas):
     perfil = ""
+
     # creacion de la sesion para acceder a la base de datos
     archivos_no_validos = []
+
+    #conexión a la base de datos a través de la sesion local
     db = SessionLocal()
+
     for ruta in lista_rutas:
         # con el dato de la ruta se obtiene solo el nombre del archivo
         nombre_archivo = os.path.basename(ruta)
-        print(f"Analizando: {ruta}")
+        '''//////****** Muestra en pantalla el archivo que esta siendo revisado'''
+        # print(f"Analizando: {ruta}")
         # se obtiene la extension del archivo
         extension_archivo = os.path.splitext(nombre_archivo)[1]
         try:
@@ -32,9 +37,7 @@ def evaluar_guardar_archivos(lista_rutas):
             # estas condiciones podrían ser modificadas en base al nombre del archivo, depende de los archivos como tal
             # estas condiciones buscan que si un archivo es csv, su nombre debe iniciar con EDP, y si el archivo es prn su nombre debe iniciar con a
             # si no es así entonces no se abrirá dicho archivo y por lo tanto no se realizará su proceso de guardado respectivo
-            ''' EVALUAR SIEMPRE EL TEMA DE LAS CONDICIONES, FRANK SOLIS, COMENTA QUE EL NOMBRE DE LOS ARCHIVOS (csv, QUE VENDRÍAN A SER LOS ELSTER)
-            SIEMPRE INCIAN CON EDP; SIN EMBARGO, RESPONDIÓ TEXTUALMENTE: ".Para este primer avance solo se tiene A1800R", POR LO TANTO SE PUEDE 
-            SOMETER A EVALUACIÓN LA SEGUNDA CONDICIÓN PARA LOS ARCHIVOS PRN '''
+            
             if((extension_archivo == '.csv' and nombre_archivo.startswith("EDP")) or (extension_archivo == '.prn' and nombre_archivo.startswith("A"))):
                 with open(ruta, 'r') as archivo:
 
@@ -48,9 +51,9 @@ def evaluar_guardar_archivos(lista_rutas):
                     
                     # se lee el archivo linea por linea
                     for line in archivo:
+
                         # separa los valores de la línea por comas y elimina los espacios en blanco que se encuentra entre cada dato
                         # los guarda dentro de una lista llamada 'values'
-
                         values = [value.strip() for value in line.split(separador)]
                         #print(values)
                         

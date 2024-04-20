@@ -26,15 +26,6 @@ CREATE TABLE datos_medidor_consumo(
     kvarh_q4 DECIMAL(14, 8) NULL
 );
 
-- script para crear la tabla de medidores
-CREATE TABLE medidores(
-    id VARCHAR(12) PRIMARY KEY,
-    sed VARCHAR(12) NULL,
-    fecha_instalacion date NULL,
-    marca varchar(12) NULL,
-    factor DECIMAL(6,2) NULL
-);
-
 - script para crear la tabla de perfiles de instrumentación
 CREATE TABLE datos_medidor_instrumentacion( 
     id INT PRIMARY KEY AUTO_INCREMENT, 
@@ -56,6 +47,16 @@ CREATE TABLE datos_medidor_instrumentacion(
     average_phase_c_kw DECIMAL(14, 8) NULL 
 );
 
+- script para crear la tabla de medidores
+CREATE TABLE medidores(
+    id VARCHAR(12) PRIMARY KEY,
+    sed VARCHAR(12) NULL,
+    fecha_instalacion date NULL,
+    marca varchar(12) NULL,
+    factor DECIMAL(6,2) NULL
+);
+
 - script para eliminar los registros de la base de datos:
 TRUNCATE TABLE datos_medidor_consumo
 TRUNCATE TABLE datos_medidor_instrumentacion
+TRUNCATE TABLE medidores

@@ -6,10 +6,9 @@ import matplotlib.pyplot as plt
 from decimal import Decimal
 import calendar
 import numpy as np
-resultado_fechas = []
+fechas_excedentes = []
 
 def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
-    
     # try:
     sumatoria_total = []
     # consulta a la base de datos
@@ -47,6 +46,7 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
 
     # selecciona al último dato de las fechas
     ultimo_dia = resultados[-1].date
+
     '''
     ESTA SECCION EVALÚA SI LA FECHA SELECCIONADA POR EL USUARIO EXCEDE A LA FECHA DE REGISTROS CON LA QUE CUENTA EL MEDIDOR EN CUESTIÓN,
     DE CUMPLIRSE SE PROCEDEDERÁ A ENVIAR DATA PARA MOSTRAR DESDE LA INTERFAZ MAIN.PY, SE DEBERÍA DE ALMACENAR EN UNA LISTA, INDICANDO LAS FECHAS Y MEDIDOR 
@@ -56,7 +56,7 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     #print(f"Ultimo dia de seleccion por el usuario {fecha_fin}")
  
     if ultimo_dia<fecha_fin:
-        resultado_fechas.append(medidor_id)
+        fechas_excedentes.append(medidor_id)
 
     '''Definir la función que recibirá este dato'''
     # agregar datos en una nueva variable de resultados
@@ -121,6 +121,8 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
         '''
         # consumo sería el valor número del conjunto de días sumados, pero en base a una hora en específico
         # por esa razón es necesario que en cada bucle se añada a la lista 'suma_total'
+        # en este apartado se imprime la suma total de todos los días seleccionados por horas, con lo que se imprime
+        # se puede obtener facilmente la hora de máximo consumo
         print(f"{hora:02d}:{minutos:02d} {consumo}")
         valores_horas.append(f"{hora:02d}:{minutos:02d} {consumo}")
         # se extrae el valor de conusmo y se agrega a la lista sumatoria total, esto representará el consumo total por horas
@@ -156,26 +158,30 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     # Calcula el número total de días en el rango de fechas seleccionado
     total_dias = (fecha_fin - fecha_inicio).days +1
 
-    # Diccionario para almacenar el número de días por mes
+    # diccionario para almacenar el número de días por mes
     dias_por_mes = {}
 
-    # Itera sobre cada día en el rango y cuenta cuántos días hay por mes
+    # iterando sobre cada día en el rango y cuenta cuántos días hay por mes
     for i in range(total_dias):
         fecha = fecha_inicio + timedelta(days=i)
         mes = fecha.month
         dias_por_mes[mes] = dias_por_mes.get(mes, 0) + 1
 
-    # Determina el mes predominante
+    # determina cual el mes predominante
     mes_predominante = max(dias_por_mes, key=dias_por_mes.get)
 
-    # Calcula el número de días del mes predominante
+    # calcula el número de días del mes predominante
     dias_mes_predominante = dias_por_mes.get(mes_predominante, 0)
 
-    # Determina si hay más días en el mes predominante o en el siguiente mes
+    # determina si hay más días en el mes predominante o en el siguiente mes
     if dias_mes_predominante > total_dias / 2:
         dias_mes = calendar.monthrange(fecha_inicio.year, mes_predominante)[1]
     else:
-        # Si el mes siguiente tiene más días, usa su cantidad de días
+        # si el mes siguiente tiene más días, usa su cantidad de días
+        # se evalúa en base al registro, por ejemplo si se selcciona una fecha entre el 28 marzo
+        # en este caso al ser 7 días se usarían datos desde el 28 de marzo al 3 de abril,
+        # en el grupo de días de marzo se tiene un total de cuatro días mientras que el segundo grupo
+        # solo representa tres días, el valor a tomar según este ejemplo al mes de marzo
         siguiente_mes = (fecha_fin.replace(day=1) + timedelta(days=32)).replace(day=1).month
         dias_mes = calendar.monthrange(fecha_fin.year, siguiente_mes)[1]
 
@@ -244,7 +250,7 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
         #tipo_consumo = "En proceso"
 
         #hora de maximo consumo
-        lista_resultados = [medidor_id, dias_con_datos, mes_predominante, contador_vacios, fecha_hora_primer_vacio, fecha_hora_ultimo_vacio, resultado_total, consumo_mes, hora_max_formateada, tipo_consumo, resultado_fechas]
+        lista_resultados = [medidor_id, dias_con_datos, mes_predominante, contador_vacios, fecha_hora_primer_vacio, fecha_hora_ultimo_vacio, resultado_total, consumo_mes, hora_max_formateada, tipo_consumo, fechas_excedentes]
         #print(f"El consumo total del mes se calcula con el resultado total multiplicado por:{operante} ")
         '''
         print(f"Medidor ID: {medidor_id}")
@@ -277,65 +283,3 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     return lista_resultados
     # except:
     #     print("No se pudo completar la operación, inténtelo nuevamente y revise los rangos de fecha seleccionados")
-
-# se asignan datos para realizar pruebas
-# debemos asegurarnos de respetar los formatos de fecha
-'''pruebas manuales, actualmente ya se pueden realizar estas pruebas desde el aplicativo'''
-# fecha_inicio = datetime(2024, 2, 24)
-# fecha_fin = datetime(2024, 3, 1)
-# medidor_id = "8096"
-
-# fecha_inicio = datetime(2024, 3, 16)
-# fecha_fin = datetime(2024, 3, 22)
-# medidor_id = "8162"
-
-# se asignan datos para realizar pruebas
-# debemos asegurarnos de respetar los formatos de fecha
-#fecha_inicio = datetime(2024, 3, 1)
-#fecha_fin = datetime(2024, 3, 4)
-#medidor_id = "08119"
-
-#obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id)
-
-# llamando a la funcion
-#datos_consumo = obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id)
-
-def generar_grafico_consumo_por_horas(datos):
-
-    # Desempaquetar los datos
-    horas = [f"{hora:02d}:{minuto:02d}" for hora, minuto, _ in datos]
-    consumos = [consumo for _, _, consumo in datos]
-
-    #print("Datos: \n")
-    #print(datos)
-    # se encuentra al índice que posee el dato del pico máximo  
-    try:        
-        indice_pico_maximo = consumos.index(max(consumos))
-        # se guarda el valor de este dato en la variable
-        hora_pico_maximo = horas[indice_pico_maximo]
-
-        # se crea el gráfico
-        # se crea el tamaño de la figura en la ventana
-        fig = plt.figure(figsize=(10, 6))
-
-        # se proporcionan datos para el gráficos como el formato de línea, color y datos
-        plt.plot(horas, consumos, color='tab:orange', linestyle='-')
-
-        # se marca el punto con el máximo consumo
-        plt.scatter(hora_pico_maximo, max(consumos), color='b', label=f'Máx. Demanda: {hora_pico_maximo} - kW {max(consumos):.8f}', zorder=5)
-        
-        # se añade data para las etiquetas y leyenda
-        plt.title('Máxima demanda')
-        plt.ylabel('Consumo de energía (kWh)')
-        plt.xticks(range(0, len(horas), 4), rotation='vertical')
-        plt.legend()
-
-        # muestra el gráfico
-        plt.grid(axis='y')
-        plt.tight_layout()
-        #plt.show()
-        return fig
-    except:
-        return None
-
-#generar_grafico_consumo_por_horas(datos_consumo)

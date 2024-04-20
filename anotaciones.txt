@@ -1,3 +1,9 @@
+/****---- 15_04
+- Los gráficos se generan y se guardan en una carpeta en donde primero se realizan las validaciones de si existe o no la carpeta, luego de ello se coloca el id del medidor específico segudi por la fecha de inicio y la fecha final.
+- Los reportes se generan primero en la interfaz, en donde podrán ser visibles por el usuario, se mostrarán los campos específicos segun las reuniones previas, se comprueba si el archivo de exceñ existe o no de no existir se crea uno nuevo en la ruta 
+y si existe solo se coloca la información en las filas siguientes.
+- Pendiente, identificar los tipos de clientes
+
 /****-----
 9_04 Reunión, presentación de avance (aplicativo medidores totalizadores enel)
 apuntes:

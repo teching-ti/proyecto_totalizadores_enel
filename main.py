@@ -2,12 +2,10 @@ import tkinter as tk
 from tkinter import *
 from tkinter import messagebox, filedialog
 from tkinter.messagebox import askyesno
-from tkinter.ttk import Label, Treeview
+
 from tkinter import ttk
 from tkcalendar import Calendar
-from PIL import Image, ImageTk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
+
 from logica_guardar_datos import evaluar_guardar_archivos, evaluar_guardar_medidores_factor
 from graficos_consumos import grafico_perfiles_instrumentacion
 import datetime
@@ -22,7 +20,7 @@ from sqlalchemy import func
 
 # Reportes
 # primer grafico y data
-from reporte_consumos import obtener_consumo_por_medidor_y_rango, generar_grafico_consumo_por_horas
+from reporte_consumos import obtener_consumo_por_medidor_y_rango
 
 # función para obtener información específica de los medidores, esta información serpa visible en la pestaña principal "Datos histróricos"
 def obtener_medidores_info():
@@ -34,13 +32,6 @@ def obtener_medidores_info():
 
         # lista que cargará la data de los medidores según la base de dato
         medidores_info = []
-
-        # for medidor in db.query(DatosMedidorConsumo.meter_id).distinct().all():
-        #     primer_registro = db.query(DatosMedidorConsumo.date).filter_by(meter_id=medidor[0]).order_by(DatosMedidorConsumo.date).first()
-        #     ultimo_registro = db.query(DatosMedidorConsumo.date).filter_by(meter_id=medidor[0]).order_by(DatosMedidorConsumo.date.desc()).first()
-        #     huecos = db.query(DatosMedidorConsumo).filter(DatosMedidorConsumo.meter_id == medidor[0], DatosMedidorConsumo.kwh_del.is_(None)).count()
-        #     medidores_info.append((medidor[0], primer_registro[0], ultimo_registro[0], huecos))
-        # return medidores_info
 
         # Iterar sobre los IDs de los medidores con consumo
         for medidor_id, in medidores_con_consumo:
@@ -149,20 +140,13 @@ def importar_medidores():
     else:
         messagebox.showerror("Mensaje", "Debe seleccionar el archivo excel específico")
 
-
-    
 '''Comienza la sección para generar reportes'''
 # primera funcion para generar reportes
 def generar_reportes_one():
-    
     if not treeview_medidores.selection():
         messagebox.showwarning("Medidor no seleccionado", "Por favor, seleccione un medidor antes de generar el reporte.")
         return
     else:
-        '''esta seccion sirve para obtener una lista con los medidores seleccionados y en la funcion de (generar_reportes) ya no se enviaría un id sino una lista de id'''
-        #for item in treeview_medidores.selection():
-        #    medidor_id = treeview_medidores.item(item, "text")
-        #    lista_medidores.append(medidor_id)
         abrir_ventana_periodo()
     #print(lista_medidores)
 
@@ -285,75 +269,42 @@ def verificar_y_generar_excel():
     else:
         messagebox.showwarning("Sin datos", "No hay datos para generar el archivo Excel.")
 
-# función para crear el excel con la data obtenida desde la respuesta de la función
-# def generar_excel():
-#     # uso de la variable global declarada anteriormente
-#     global datos_obtenidos_globales
-#     #print(datos_obtenidos_globales)
-#     # se crear un nuevo libro de Excel vacío
-
-#     workbook = openpyxl.Workbook()
-#     # obtiene la hoja activa del libro 'por defecto es la primera'
-#     sheet = workbook.active
-#     # le da título a la hoja activa
-#     sheet.title = "Reporte"
-
-#     # escribe los siguientes encabezados en la primera fila
-#     headers = ["Medidor", "Dias", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"]
-
-#     # recorre la lista de headers
-#     for col, header in enumerate(headers, start=1):
-#         # con la finalidad de escribir los encabezados, empieza en la primera fila
-#         sheet.cell(row=1, column=col, value=header)
-
-#     # recorre los datos de la lista datos_obtenidos_globales, que contiene los datos recibidos
-#     for row, datos in enumerate(datos_obtenidos_globales, start=2):
-#         # Si hay datos y la longitud de la lista es mayor que 1
-#         if datos and len(datos) > 1:
-#             # se recorre cada elemento independiente de la lista datos
-#             for col, dato in enumerate(datos[:-1], start=1):  # Excluye el último elemento
-#                 sheet.cell(row=row, column=col, value=dato)
-
-#     # se guardar el archivo Excel
-#     # se pregunta por el nombre del archivo y su ubicación
-#     filename = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Archivos de Excel", "*.xlsx")])
-#     if filename:
-#         # si existe un nombre asignado al archivo se guarda
-#         workbook.save(filename)
-#         # se muestra mensaje de confirmación
-#         messagebox.showinfo("Éxito", f"Archivo Excel guardado en {filename}")
-
 # función para crear el excel con la data obtenida desde lo mostrado en el treeview de tkinter
 def generar_excel():
     try:
-        # crea un nuevo excel vacío
-        workbook = openpyxl.Workbook()
-        # se obtiene la hoja activa del libro, normalmente es la primera hoja
-        sheet = workbook.active
-        # título de la hoja
-        sheet.title = "Reporte"
+        # Ruta de la carpeta de descargas de Windows
+        carpeta_descargas = os.path.join(os.path.expanduser('~'), 'Downloads')
+        # Ruta del archivo "DATOS_REPORTES.xlsx"
+        archivo_excel = os.path.join(carpeta_descargas, 'APLICATIVO_ENEL_SUMINISTROS_REPORTES', 'DATOS_REPORTES.xlsx')
 
-        # se obtienen los encabezados del treeview
-        headers = ["Medidor", "Dias", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"]
+        if os.path.exists(archivo_excel):
+            # Si el archivo ya existe, abrirlo y cargar el libro de trabajo
+            workbook = openpyxl.load_workbook(archivo_excel)
+            # Seleccionar la hoja activa del libro
+            sheet = workbook.active
+        else:
+            # Si el archivo no existe, crear uno nuevo y agregar una hoja llamada "Reporte"
+            workbook = openpyxl.Workbook()
+            sheet = workbook.active
+            sheet.title = "Reporte"
 
-        # coloca los encabezados en la priemra fila de la hoja activa
-        for col, header in enumerate(headers, start=1):
-            sheet.cell(row=1, column=col, value=header)
+            # Agregar los encabezados a la primera fila
+            headers = ["Medidor", "Dias", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"]
+            for col, header in enumerate(headers, start=1):
+                sheet.cell(row=1, column=col, value=header)
 
-        # recorre cada fila del treeview
+        # Recorrer cada fila del treeview
         for row_id in treeview_reportes.get_children():
-            # obtiene los valores de cada columna en la fila actual
+            # Obtener los valores de cada columna en la fila actual
             valores_fila = [treeview_reportes.item(row_id, "text")] + [treeview_reportes.set(row_id, col) for col in treeview_reportes["columns"]]
-            # agrega los valores de cada fila al archivo excel
+            # Agregar los valores de cada fila al archivo excel en la siguiente fila disponible
             sheet.append(valores_fila)
 
-        # guarda el archivo excel (por el momento pregunta donde se guardará el documento y el nombre del archivo)
-        filename = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Archivos de Excel", "*.xlsx")])
-        if filename:
-            workbook.save(filename)
-            messagebox.showinfo("Éxito", f"Archivo Excel guardado en {filename}")
-    except:
-        print("Existe un error")
+        # Guardar el archivo excel
+        workbook.save(archivo_excel)
+        messagebox.showinfo("Éxito", f"Datos guardados en {archivo_excel}")
+    except Exception as e:
+        messagebox.showerror("Error", f"Se produjo un error al guardar los datos: {str(e)}")
     else:
         # se obtiene el id de los medidores seleccionados para generar sus gráficos respectivos
         ids_medidores = [treeview_reportes.item(row_id, "text") for row_id in treeview_reportes.get_children()]
@@ -413,6 +364,7 @@ def actualizar_lista_medidores():
 root = tk.Tk()
 root.title("Aplicativo para la campaña de totalizadores")
 root.geometry("1450x800")
+root.resizable(False, False)
 root.config(bg="white")
 icono = tk.PhotoImage(file="./images/fav-icon-ti.png")
 root.iconphoto(True, icono)
@@ -428,31 +380,6 @@ logo = tk.PhotoImage(file="./images/logo_teching.png")
 # se carga la iamgen del logo en un label
 menu_titulo = tk.Label(menu_frame, image=logo ,compound=tk.LEFT, font=("Arial", 14), bg="#2f3640", fg="white")
 menu_titulo.pack(pady=35)
-
-# se agrega un combobox para poder seleccionar con que tipo de perfil desea interactuar el usuario
-'''INICIA FUNCIONALIDADES DEL COMBOBOX EN EL MENU'''
-# SE AGREGÓ UN COMBO BOX AL MENU PARA SELECCIONAR EL TIPO DE PERFIL A IMPORTAR
-# SE PUEDE AGREGAR UN BOTON PARA INSERTAR ALLÍ LOS FACTORES O UNA LÓGICA PARA ABRIR EL ARCHIVO Y EXTRAERLOS DIRECTAMENTe
-# GUARDARLOS EN UNA TABLA Y POSTEIORMENTE USARLOS PARA REALIZAR LOS CÁLCULOS CORRESPONDIENTES
-# def seleccionar_perfil(event):
-#     perfil_seleccionado = combo.get()
-
-#     if perfil_seleccionado == "Perfiles de Carga":
-#         boton_importar.config(command=importar_lecturas)
-#     elif perfil_seleccionado == "Perfiles de Instrumentación":
-#         boton_importar.config(command=boton2)
-
-# combo = ttk.Combobox(
-#     menu_frame,
-#     state="readonly",
-#     values=["Perfiles de Carga", "Perfiles de Instrumentación"],
-#     width=26
-# )
-
-# combo.set("Perfiles de Carga")
-# combo.pack(pady=25, padx=20)
-# combo.bind("<<ComboboxSelected>>", seleccionar_perfil)
-'''FINALIZAN FUNCIONALIDADES DEL COMBOBOX EN EL MENU'''
 
 # se cargan los íconos para los botones
 icono1 = tk.PhotoImage(file="images/img1.png")
@@ -484,7 +411,6 @@ boton_eliminar = tk.Button(menu_frame, text="   Eliminar   ", image=imagen3, com
 boton_eliminar.pack(pady=25, padx=20)
 boton_salir = tk.Button(menu_frame, text="   Salir   ", image=imagen4, compound=tk.LEFT ,command=salir, width=155, cursor="hand2")
 boton_salir.pack(pady=25, padx=20)
-
 '''Finaliza Menu'''
 
 # Crear el Notebook
