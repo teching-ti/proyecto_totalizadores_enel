@@ -182,7 +182,7 @@ def grafico_perfiles_instrumentacion(medidores, fecha_inicio, fecha_fin):
             plt.legend()
             plt.grid(linestyle="dashed")
 
-            plt.tight_layout()  # Ajustar el espaciado entre subgráficos
+            plt.tight_layout()  # espaciado entre subgráficos
 
             # Obtener la ruta de la carpeta de descargas en Windows
             carpeta_graficos = os.path.join(os.environ["USERPROFILE"], "Downloads", "APLICATIVO_ENEL_SUMINISTROS_REPORTES", "GRAFICAS_SUMINISTROS")

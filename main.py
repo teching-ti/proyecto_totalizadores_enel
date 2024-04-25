@@ -14,11 +14,19 @@ import os
 
 import openpyxl
 # Base de datos
-from db import SessionLocal
-from modelos import DatosMedidorConsumo, Medidores, DatosMedidorInstrumentacion
+from db import SessionLocal, SessionLocal2
+from modelos import DatosMedidorConsumo, Medidores, DatosMedidorInstrumentacion, Permitidos
 from sqlalchemy import func
 
-# Reportes
+# obtener el numero serial del dispositivo donde se pretende ejecutar el aplicativo
+import subprocess
+output = subprocess.check_output('wmic bios get serialnumber').decode("utf-8")
+# se devuelve un encabezado en la parte superior y tras un salto de línea se muestra el número serial
+# se separa en un array para tomarlo como segundo elemento
+lines = output.strip().split('\n')
+serial_number = lines[1]
+
+# reportes
 # primer grafico y data
 from reporte_consumos import obtener_consumo_por_medidor_y_rango
 
@@ -272,10 +280,17 @@ def verificar_y_generar_excel():
 # función para crear el excel con la data obtenida desde lo mostrado en el treeview de tkinter
 def generar_excel():
     try:
-        # Ruta de la carpeta de descargas de Windows
+        # ruta de la carpeta de descargas de Windows
         carpeta_descargas = os.path.join(os.path.expanduser('~'), 'Downloads')
-        # Ruta del archivo "DATOS_REPORTES.xlsx"
-        archivo_excel = os.path.join(carpeta_descargas, 'APLICATIVO_ENEL_SUMINISTROS_REPORTES', 'DATOS_REPORTES.xlsx')
+
+        # ruta de la carpeta
+        carpeta_aplicativo_reportes = os.path.join(carpeta_descargas, 'APLICATIVO_ENEL_SUMINISTROS_REPORTES')
+
+        if not os.path.exists(carpeta_aplicativo_reportes):
+           os.makedirs(carpeta_aplicativo_reportes)
+
+        # ruta del archivo "DATOS_REPORTES.xlsx"
+        archivo_excel = os.path.join(carpeta_descargas, carpeta_aplicativo_reportes, 'DATOS_REPORTES.xlsx')
 
         if os.path.exists(archivo_excel):
             # Si el archivo ya existe, abrirlo y cargar el libro de trabajo
@@ -529,8 +544,35 @@ treeview_reportes.pack(expand=True, fill="both")
 actualizar_lista_medidores()
 
 notebook.pack(expand=True, fill="both")
+
 try:
-    root.mainloop()
+    # se valida que el aplicativo esté siendo ejecutado donde el codigo serial coincida con el de la pc donde se pretenda usar
+    db2 = SessionLocal2()
+
+    # consulta para obtener todos los datos guardados
+    usuarios_permitidos = db2.query(Permitidos).all()
+
+    serial_valido = False
+
+    # comparar el numero de serie de la pc actual con alguno de los registrados
+    for dato in usuarios_permitidos:
+        nombre_usuario = dato.usuario
+        serie_usuario = dato.serie
+
+        if(serial_number==serie_usuario):
+            serial_valido=True
+        break
+
+    # se cierra la conexión después de la validación
+    db2.close()
+
+    # se mantiene en ejecución el aplicativo siempre y cuando se hayan realizado las validaciones
+    if(serial_valido):
+        #print("Se puede ejecutar el aplicativo")
+        root.mainloop()
+    else:
+        messagebox.showerror("Acceso Denegado", "Comuníquese con el área de TI para gestionar su solicitud de acceso.")
+
 except KeyboardInterrupt:
     print("Aplicación interrumpida por el usuario.")
 finally:

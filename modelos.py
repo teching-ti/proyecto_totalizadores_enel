@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, Time, Float, DECIMAL
-from db import Base
+from db import Base, Base2
 
 class DatosMedidorConsumo(Base):
     __tablename__ = "datos_medidor_consumo"
@@ -49,3 +49,9 @@ class Medidores(Base):
     fecha_instalacion = Column(Date, nullable=True)
     marca = Column(String, nullable=True)
     factor = Column(DECIMAL(precision=6, scale=2), nullable=True)
+
+class Permitidos(Base2):
+    __tablename__ = 'permitidos'
+
+    usuario = Column(String, primary_key=True)
+    serie = Column(String, nullable=False)
