@@ -219,6 +219,9 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     # max_consumo = consumo_por_hora[hora_max_consumo]
 
     '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO INICIA'''
+    # a evaluar
+    ######### - dividir en 4 franjas los 96 datos
+    ######### - madrugada, mañana, tarde, noche
     # Variable para almacenar el tipo de consumo
     print(f"Hora maxima, {hora_max_formateada}")
 

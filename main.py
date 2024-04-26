@@ -571,6 +571,8 @@ try:
         #print("Se puede ejecutar el aplicativo")
         root.mainloop()
     else:
+        #si no se encuentra el número de serie del dispositivo en donde se esta ejecutando este aplicativo, dentro de la base de datos
+        #no se podrá abrir y aparecerá el siguiente mensaje
         messagebox.showerror("Acceso Denegado", "Comuníquese con el área de TI para gestionar su solicitud de acceso.")
 
 except KeyboardInterrupt:
