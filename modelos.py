@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Time, Float, DECIMAL
+from sqlalchemy import Column, Integer, String, Date, Time, DECIMAL
 from db import Base, Base2
 
 class DatosMedidorConsumo(Base):

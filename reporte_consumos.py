@@ -124,7 +124,7 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
         # en este apartado se imprime la suma total de todos los días seleccionados por horas, con lo que se imprime
         # se puede obtener facilmente la hora de máximo consumo
         print(f"{hora:02d}:{minutos:02d} {consumo}")
-        valores_horas.append(f"{hora:02d}:{minutos:02d} {consumo}")
+        valores_horas.append(f"{hora:02d}:{minutos:02d}-{consumo}")
         # se extrae el valor de conusmo y se agrega a la lista sumatoria total, esto representará el consumo total por horas
         sumatoria_total.append(consumo)
 
@@ -155,7 +155,7 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     # obtener días por mes
     # CALCULAR A QUÉ MES PERTENECE Y EJECUTAR EL CALCULO DEL MES
     '''agregado inicia'''
-    # Calcula el número total de días en el rango de fechas seleccionado
+    # se calcula el número total de días en el rango de fechas seleccionado
     total_dias = (fecha_fin - fecha_inicio).days +1
 
     # diccionario para almacenar el número de días por mes
@@ -185,7 +185,7 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
         siguiente_mes = (fecha_fin.replace(day=1) + timedelta(days=32)).replace(day=1).month
         dias_mes = calendar.monthrange(fecha_fin.year, siguiente_mes)[1]
 
-    # Ajusta el número de días para febrero si es necesario
+    # se ajusta el número de días para febrero si es necesario
     if mes_predominante == 2:
         dias_mes = min(dias_mes, 28)
     '''agregado final'''
@@ -193,22 +193,22 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
 
     ''' Datos de vacíos '''
     contador_vacios = 0
-    # Variables para almacenar la fecha y hora del primer y último vacío
+    # se inican variables para almacenar la fecha y hora del primer y último vacío
     fecha_hora_primer_vacio = None
     fecha_hora_ultimo_vacio = None
 
-    # Iterar sobre los resultados
+    # iterando sobre los resultados
     for resultado in resultados:
-        # Verificar si el consumo es NULL
+        # verifica si el consumo es NULL
         if resultado.consumo is None:
             contador_vacios += 1
-            # Obtener la fecha y hora del primer vacío
+            # obtiene la fecha y hora del primer vacío
             if fecha_hora_primer_vacio is None:
                 fecha_hora_primer_vacio = f"{resultado.date} {resultado.hora}:{resultado.minuto}"
-            # Almacenar la fecha y hora del último vacío en cada iteración
+            # almacena la fecha y hora del último vacío en cada iteración
             fecha_hora_ultimo_vacio = f"{resultado.date} {resultado.hora}:{resultado.minuto}"
 
-    # Encontrar la hora con el máximo consumo y su valor correspondiente
+    # se halla la hora con el máximo consumo y su valor correspondiente
     hora_max_consumo = max(consumo_por_hora, key=consumo_por_hora.get)
     hora_max = int(hora_max_consumo)
     min_max = int((hora_max_consumo % 1) * 60)
@@ -222,17 +222,21 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     # a evaluar
     ######### - dividir en 4 franjas los 96 datos
     ######### - madrugada, mañana, tarde, noche
-    # Variable para almacenar el tipo de consumo
-    print(f"Hora maxima, {hora_max_formateada}")
+    # variable para almacenar el tipo de consumo
+    tipo_consumo = None
+    print("-----")
+    #print(valores_horas)
+    madrugada = valores_horas[0:23]
+    madrugada = sum([float(valor.split("-")[1]) for valor in madrugada])
+    mañana = valores_horas[24:48]
+    mañana = sum([float(valor.split("-")[1]) for valor in mañana])
+    tarde = valores_horas[49:73]
+    tarde = sum([float(valor.split("-")[1]) for valor in tarde])
+    noche = valores_horas[74:96]
+    noche = sum([float(valor.split("-")[1]) for valor in noche])
+    
+    # continuar...
 
-    if 18 <= hora_max < 23:
-        tipo_consumo = "Residencial"
-    elif 6 <= hora_max < 18:
-        tipo_consumo = "Industrial/ Comercial (En proceso)"
-    else:
-        tipo_consumo = "Desconocido"
-    print(tipo_consumo)
-        
     '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO TERMINA'''
 
     # se crea una variable que almacenará la suma de los elementos en la lista, lo que sería el acumulado en todo el rango de fechas seleccionado
