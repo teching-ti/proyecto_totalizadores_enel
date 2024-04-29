@@ -219,6 +219,21 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     # max_consumo = consumo_por_hora[hora_max_consumo]
 
     '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO INICIA'''
+    # Determina los límites de cada franja horaria
+    limites_franjas = {
+        "madrugada": (0, 5),
+        "mañana": (6, 11),
+        "tarde": (12, 17),
+        "noche": (18, 23)
+    }
+    
+    for franja, (limite_inferior, limite_superior) in limites_franjas.items():
+    # Si la hora máxima está entre los límites de esta franja o coincide exactamente con uno de los límites,
+    # entonces se encuentra en esta franja
+        if limite_inferior <= hora_max <= limite_superior or (hora_max == limite_inferior and hora_max == limite_superior):
+            print(f"La hora máxima de consumo ({hora_max_formateada}) se encuentra en la franja {franja}.")
+            break
+
     # a evaluar
     ######### - dividir en 4 franjas los 96 datos
     ######### - madrugada, mañana, tarde, noche
@@ -234,9 +249,26 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     tarde = sum([float(valor.split("-")[1]) for valor in tarde])
     noche = valores_horas[74:96]
     noche = sum([float(valor.split("-")[1]) for valor in noche])
+
+    print(f"madrugada: {madrugada}")
+    print(f"mañana: {mañana}")
+    print(f"tarde: {tarde}")
+    print(f"noche: {noche}")
+
+    if (franja=='noche'):
+        if(noche>tarde and tarde > madrugada):
+            tipo_consumo = 'Comercial - Residencial'
+        elif(madrugada>mañana):
+            tipo_consumo = 'Industrial - Residencial'
+        else:
+            tipo_consumo = 'Comercial - Residencial'
+    elif (franja=='mañana' or franja=='tarde'):
+        if(mañana > madrugada and mañana >noche and tarde > madrugada and tarde > noche):
+            tipo_consumo='Industrial'
+    else:
+        tipo_consumo = "Comercial"
     
     # continuar...
-
     '''INTENTANDO HALLAR EL TIPO DE SUMINISTRO TERMINA'''
 
     # se crea una variable que almacenará la suma de los elementos en la lista, lo que sería el acumulado en todo el rango de fechas seleccionado
