@@ -1,7 +1,7 @@
 from sqlalchemy import func
 from db import session
 from datetime import datetime,  timedelta
-from modelos  import DatosMedidorConsumo
+from modelos  import DatosMedidorConsumo, Medidores
 import matplotlib.pyplot as plt
 from decimal import Decimal
 import calendar
@@ -11,6 +11,7 @@ fechas_excedentes = []
 def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     # try:
     sumatoria_total = []
+
     # consulta a la base de datos
     consulta = session.query(
     DatosMedidorConsumo.date,
@@ -30,9 +31,13 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
         func.HOUR(DatosMedidorConsumo.time),
         func.MINUTE(DatosMedidorConsumo.time)
     )
-    
+
     # se ejecuta la consulta
     resultados = consulta.all()
+
+    # se obtiene el factor
+    consultar_factor = session.query(Medidores.factor).filter(Medidores.id==medidor_id)
+    factor = consultar_factor.scalar()
 
     # selecciona al primer dato de las fechas
     fecha_inicio_consulta = resultados[0].date
@@ -250,10 +255,11 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
     noche = valores_horas[74:96]
     noche = sum([float(valor.split("-")[1]) for valor in noche])
 
-    print(f"madrugada: {madrugada}")
-    print(f"mañana: {mañana}")
-    print(f"tarde: {tarde}")
-    print(f"noche: {noche}")
+    # imrpime los valores de cada franja horaria
+    # print(f"madrugada: {madrugada}")
+    # print(f"mañana: {mañana}")
+    # print(f"tarde: {tarde}")
+    # print(f"noche: {noche}")
 
     if (franja=='noche'):
         if(noche>tarde and tarde > madrugada):
@@ -284,12 +290,16 @@ def obtener_consumo_por_medidor_y_rango(fecha_inicio, fecha_fin, medidor_id):
         
         # consumo total del mes
         consumo_mes = round(resultado_total * operante, 6)
+
+        # energia *factor
+        energy_factor = (consumo_mes*factor)/1000
     
         # es importante obtener el tipo de consumo
         #tipo_consumo = "En proceso"
 
         #hora de maximo consumo
-        lista_resultados = [medidor_id, dias_con_datos, mes_predominante, contador_vacios, fecha_hora_primer_vacio, fecha_hora_ultimo_vacio, resultado_total, consumo_mes, hora_max_formateada, tipo_consumo, fechas_excedentes]
+        # lista_resultados = [medidor_id, dias_con_datos, mes_predominante, contador_vacios, fecha_hora_primer_vacio, fecha_hora_ultimo_vacio, resultado_total, consumo_mes, hora_max_formateada, tipo_consumo, fechas_excedentes, factor, energy_factor]
+        lista_resultados = [medidor_id, dias_con_datos, mes_predominante, contador_vacios, fecha_hora_primer_vacio, fecha_hora_ultimo_vacio, resultado_total, consumo_mes, hora_max_formateada, tipo_consumo, factor, energy_factor, fechas_excedentes]
         #print(f"El consumo total del mes se calcula con el resultado total multiplicado por:{operante} ")
         '''
         print(f"Medidor ID: {medidor_id}")

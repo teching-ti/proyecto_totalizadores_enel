@@ -1,4 +1,11 @@
 /*****------
+14_05
+modificar código para que se genere gráfico así se tenga menos datos de fechas en los campos seleccionados, se entiende que solo se gnerea el gráfico cuand se cuenta con 96 datos
+de ser menos simplemente no genera el gráfico, cuando en realidad si debería.
+Ocurre cuando por ejemplo se toma un valor del 28/03 al 04/04 ya que cuentan con información solo hasta el 03/04
+
+
+/*****------
 29_04
 Obteniendo tipos de consumo, realizar más pruebas
 

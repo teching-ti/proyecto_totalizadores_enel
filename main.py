@@ -253,10 +253,13 @@ def generar_reportes(fecha_inicio, fecha_fin):
             ener_mes = datos[7]
             hora = datos[8]
             tipo = datos[9]
-            treeview_reportes.insert("", "end", text=medidor, values=(dia, mes, cant_v, desde, hasta, acum, ener_mes, hora, tipo))
+            factor = datos[10]
+            energia_factor = datos[11]
+            treeview_reportes.insert("", "end", text=medidor, values=(dia, mes, cant_v, desde, hasta, acum, ener_mes, hora, tipo, factor, energia_factor))
 
         datos_medidores_fechas = (datos_obtenidos[-1][-1])
-            # se guarda en la variable global la lista de datos obtenidos
+        print(f"datos medidores fechas: {datos_medidores_fechas}")
+        # se guarda en la variable global la lista de datos obtenidos
         datos_obtenidos_globales = datos_obtenidos
     except:
         messagebox.showwarning("Aviso", "No se pudo completar la operación, inténtelo nuevamente y revise los rangos de fecha seleccionados")
@@ -302,7 +305,7 @@ def generar_excel():
             sheet.title = "Reporte"
 
             # se agregan los encabezados a la primera fila
-            headers = ["Medidor", "Dias", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"]
+            headers = ["Medidor", "Dias", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.", "Tipo de Consumo", "Factor", "ENERGIA*FACTOR/1000"]
             for col, header in enumerate(headers, start=1):
                 sheet.cell(row=1, column=col, value=header)
 
@@ -376,8 +379,8 @@ def actualizar_lista_medidores():
 '''ventana del aplicativo'''
 root = tk.Tk()
 root.title("Aplicativo para la campaña de totalizadores")
-root.geometry("1450x800")
-root.resizable(False, False)
+root.geometry("1620x800")
+# root.resizable(False, False)
 root.config(bg="white")
 icono = tk.PhotoImage(file="./images/fav-icon-ti.png")
 root.iconphoto(True, icono)
@@ -488,51 +491,33 @@ boton_refrescar_reportes.grid(row=0, column=1, padx=5)
 boton_generar_documento = ttk.Button(reportes_estadisticos_title, text="G. Doc", cursor="hand2", command=verificar_y_generar_excel)
 boton_generar_documento.grid(row=0, column=2, padx=5)
 
-# función que servirá para ordenar la información del treeview en la pestaña de reportes
-def sort_column(treeview, col, reverse):
-    # obtiene los datos y convertirlos a números si es posible, para luego poder ordenarlos de mayor a menor haciendo clic en los encabezados
-    data = []
-    for child in treeview.get_children(''):
-        val = treeview.set(child, col)
-        try:
-            val = float(val)
-        except ValueError:
-            pass  # si no se puede convertir a número, lo deja como está
-        data.append((val, child))
-    
-    # ordena los datos
-    data.sort(reverse=reverse)
-
-    # mueve los ítems en el Treeview a sus nuevas posiciones según el ordenamiento
-    for index, (val, child) in enumerate(data):
-        treeview.move(child, '', index)
-
-    # configura el encabezado de la columna para invertir el orden al hacer clic
-    treeview.heading(col, command=lambda: sort_column(treeview, col, not reverse))
-
 # inserción de información
-treeview_reportes = ttk.Treeview(reportes_frame, columns=("Medidor", "Días", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.Demanda", "Tipo de Consumo"))
-treeview_reportes.column("#0", width=120, stretch=NO)
-treeview_reportes.column("#1", width=60, stretch=NO)
-treeview_reportes.column("#2", width=120, stretch=NO)
-treeview_reportes.column("#3", width=120, stretch=NO)
-treeview_reportes.column("#4", width=120, stretch=NO)
-treeview_reportes.column("#5", width=120, stretch=NO)
-treeview_reportes.column("#6", width=120, stretch=NO)
-treeview_reportes.column("#7", width=120, stretch=NO)
-treeview_reportes.column("#8", width=120, stretch=NO)
-treeview_reportes.column("#9", width=180, stretch=NO)
+treeview_reportes = ttk.Treeview(reportes_frame, columns=("Medidor", "Días", "Mes", "Cant. Vacíos", "Desde", "Hasta", "Acumulado", "Energía - Mes", "Hora max.", "Tipo de Consumo", "Factor", "Energia*Factor/1000"))
+treeview_reportes.column("#0", width=120, stretch=TRUE)
+treeview_reportes.column("#1", width=60, stretch=TRUE)
+treeview_reportes.column("#2", width=60, stretch=TRUE)
+treeview_reportes.column("#3", width=120, stretch=TRUE)
+treeview_reportes.column("#4", width=120, stretch=TRUE)
+treeview_reportes.column("#5", width=120, stretch=TRUE)
+treeview_reportes.column("#6", width=120, stretch=TRUE)
+treeview_reportes.column("#7", width=120, stretch=TRUE)
+treeview_reportes.column("#8", width=90, stretch=TRUE)
+treeview_reportes.column("#9", width=180, stretch=TRUE)
+treeview_reportes.column("#10", width=90, stretch=TRUE)
+treeview_reportes.column("#11", width=180, stretch=TRUE)
 
 treeview_reportes.heading("#0", text="Medidor")
 treeview_reportes.heading("#1", text="Dias")
 treeview_reportes.heading("#2", text="Mes")
-treeview_reportes.heading("#3", text="Cant. Vacíos", command=lambda: sort_column(treeview_reportes, "col3", False))
+treeview_reportes.heading("#3", text="Cant. Vacíos")
 treeview_reportes.heading("#4", text="Desde")
 treeview_reportes.heading("#5", text="Hasta")
-treeview_reportes.heading("#6", text="Acumulado", command=lambda: sort_column(treeview_reportes, "col6", False))
-treeview_reportes.heading("#7", text="Energía - Mes", command=lambda: sort_column(treeview_reportes, "col7", False))
-treeview_reportes.heading("#8", text="Hora max.Demanda", command=lambda: sort_column(treeview_reportes, "col8", False))
+treeview_reportes.heading("#6", text="Acumulado")
+treeview_reportes.heading("#7", text="Energía - Mes")
+treeview_reportes.heading("#8", text="Hora max.")
 treeview_reportes.heading("#9", text="Tipo de Consumo")
+treeview_reportes.heading("#10", text="Factor")
+treeview_reportes.heading("#11", text="Energia*Factor/1000")
 
 treeview_reportes.pack(expand=True, fill="both")
 
