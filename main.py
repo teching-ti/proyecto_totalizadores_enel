@@ -219,7 +219,7 @@ datos_medidores_fechas = ""
 
 # función generar reportes, usando las fechas como arugmentos para otra función de se encuentra en 'reporte_cosumos'
 def generar_reportes(fecha_inicio, fecha_fin):
-
+    
     global datos_obtenidos_globales
     global datos_medidores_fechas
 
@@ -264,19 +264,13 @@ def generar_reportes(fecha_inicio, fecha_fin):
     except:
         messagebox.showwarning("Aviso", "No se pudo completar la operación, inténtelo nuevamente y revise los rangos de fecha seleccionados")
 
-    '''el usuario prefiere que todos los gráficos sean guardados en una misma carpeta, uno detrás del otro
-    para ello ya se cuenta con la tabla de medidores donde se encuentra el factor:
-    lo primero sería calcular el promedio de las corrientes, se obtiene una gráfica de ese promedio
-    tercero sería usar cada dato de ese promedio multiplicado por el factor, luego de ello se obtiene la segunda gráfica
-    '''
-
 # función para verificar si debe generarse el excel
 def verificar_y_generar_excel():
     # revisa si existe contenido en el treeview_reportes
     if treeview_reportes.get_children():
         generar_excel()
     else:
-        messagebox.showwarning("Sin datos", "No hay datos para generar el archivo Excel.")
+        messagebox.showwarning("Sin datos", "No hay datos para generar los documentos respectivos.")
 
 # función para crear el excel con la data obtenida desde lo mostrado en el treeview de tkinter
 def generar_excel():
@@ -380,7 +374,7 @@ def actualizar_lista_medidores():
 root = tk.Tk()
 root.title("Aplicativo para la campaña de totalizadores")
 root.geometry("1620x800")
-# root.resizable(False, False)
+root.resizable(False, False)
 root.config(bg="white")
 icono = tk.PhotoImage(file="./images/fav-icon-ti.png")
 root.iconphoto(True, icono)

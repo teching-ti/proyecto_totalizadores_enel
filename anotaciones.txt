@@ -4,7 +4,6 @@ modificar código para que se genere gráfico así se tenga menos datos de fecha
 de ser menos simplemente no genera el gráfico, cuando en realidad si debería.
 Ocurre cuando por ejemplo se toma un valor del 28/03 al 04/04 ya que cuentan con información solo hasta el 03/04
 
-
 /*****------
 29_04
 Obteniendo tipos de consumo, realizar más pruebas
@@ -34,7 +33,6 @@ apuntes:
 * Se requiere de implementar funciones para identificar el tipo de consumo
 * El usuario podría manejar distintos datos, pero se plantea generar reportes de perfiles de carga y al mismo tiempo generar las gráficas y guardarlas
 en una carpeta ordenada. Por lo tanto cuando haga click en "Generar" con los medidores y fechas seleccionadas se le proporcionaría "reporte en archivo excel con la información mostrada en la presentación del avance junto con las gráficas de las corrientes por promedio y días"
-
 
 
 "Importación de datos a la db"

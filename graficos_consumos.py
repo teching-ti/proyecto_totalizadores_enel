@@ -56,6 +56,7 @@ def grafico_perfiles_instrumentacion(medidores, fecha_inicio, fecha_fin):
                 corrientes = [registro[3], registro[4], registro[5]]
                 corrientes = [c for c in corrientes if c is not None and c != 'NULL']
                 promedio_corrientes = sum(corrientes) / len(corrientes)
+                print(len(corrientes))
                 factor = float(registro[6])
 
                 # Calcular el promedio del factor después de asegurarse de que las corrientes no sean None ni 'NULL'
@@ -98,7 +99,9 @@ def grafico_perfiles_instrumentacion(medidores, fecha_inicio, fecha_fin):
             valores_por_dia = []
             fechas = []
             horas_por_dia = []
-
+            '''
+            se reemplaza código para gráfico
+            '''
             # Recorrer los datos procesados y organizar los valores por día
             for fecha, valores in datos_procesados.items():
                 horas = [f"{hora // 60:02d}:{hora % 60:02d}" for hora, _ in valores]  # Formatear las horas como "HH:MM"
@@ -112,6 +115,7 @@ def grafico_perfiles_instrumentacion(medidores, fecha_inicio, fecha_fin):
                 # Crear una etiqueta legible para la leyenda
                 etiqueta = f'{fecha_legible}'
                 fechas.append(etiqueta)
+
             '''PRIMER GRAFICO DE PROMEDIOS FINALIZA'''
 
             for i, valores_dia in enumerate(valores_por_dia, start=1):
